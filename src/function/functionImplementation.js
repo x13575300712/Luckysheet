@@ -22,6 +22,111 @@ import { setcellvalue } from "../global/setdata";
 
 //公式函数计算
 const functionImplementation = {
+    "SUPER_FAR": function() {
+        //必要参数个数错误检测
+        if (arguments.length < this.m[1] || arguments.length > this.m[0]) {
+            return formula.error.na;
+        }
+        let data = {}
+        if(isRealNum(arguments[1])){
+            for(let i = 0;i < arguments[1];i++ ){
+                if(arguments[i+2]){
+                    if(getObjType(arguments[i+2]) === "object" ){
+                        if(arguments[i+2].data.v){
+                            data['value'+(i+1)] = arguments[i+2].data.v
+                        }else{
+                            return ""
+                        }
+                    }else{
+                        data['value'+(i+1)] = arguments[i+2]
+                    }
+                }else{
+                    return "#error 参数个数不满足"
+                }
+            }
+        }else{
+            return "#error 参数2需为数字"
+        }
+        var cell_r = window.luckysheetCurrentRow;
+        var cell_c = window.luckysheetCurrentColumn;
+        var cell_fp = window.luckysheetCurrentFunction;
+        var currentIndex = window.luckysheetCurrentIndex;
+        let userInfo = localStorage.getItem("userInfo")
+        let luckyInitFlg = localStorage.getItem("luckyInitFlg")
+        if(luckyInitFlg === 'true'){//远程公式不初始化
+            var d = [].concat(Store.luckysheetfile[currentIndex].data)
+            return d[cell_r][cell_c].v
+        }
+        let userInfoObject = {}
+        if(!userInfo){
+            userInfoObject = {userInfo:{
+                token:123
+            }}
+        }else{
+            userInfoObject = JSON.parse(userInfo)
+        }
+        //参数类型错误检测
+        // for (var i = 0; i < arguments.length; i++) {
+        //     var p = formula.errorParamCheck(this.p, arguments[i], i);
+        //
+        //     if (!p[0]) {
+        //         return formula.error.v;
+        //     }
+        // }
+        try {
+            var url = arguments[0]
+            let index = url.lastIndexOf("/");
+            url = url.substring(0,index).toLowerCase() + url.substring(index)
+            var value = 'loading....';
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                timeout : 10000,
+                beforeSend:function (request) {
+                    const token = 'Bearer ' + userInfoObject.userInfo.token
+                    request.setRequestHeader("Content-Type","application/json");
+                    request.setRequestHeader("Authorization",token);
+                },
+                success: async function (data) {
+                    if(data.success){
+                        value = data.rows;
+                    }else{
+                        value = data.message;
+                        return
+                    }
+                    await sheetmanage.changeSheetExec(currentIndex);
+                    var d = [].concat(Store.luckysheetfile[currentIndex].data);
+                    formula.groupValuesRefresh();
+                    formula.execFunctionGroup(cell_r, cell_c, data.rows);
+                    let ct = d[cell_r][cell_c].ct
+                    d[cell_r][cell_c] = {
+                        "v": data.rows,
+                        "f": cell_fp,
+                        "ht": d[cell_r][cell_c].ht,
+                        "ct": ct,
+                        "bg": d[cell_r][cell_c].bg
+                    };
+                    jfrefreshgrid(d, [{"row": [cell_r, cell_r], "column": [cell_c, cell_c]}]);
+                    if(luckyInitFlg === 'true'){
+                        sheetmanage.changeSheetExec(0);
+                    }
+                },
+                complete:function(XMLHttpRequest,status){ //请求完成后最终执行参数
+                    if(status === 'timeout'){//超时,status还有success,error等值的情况
+                        value = "超时啦";
+                    }
+                }
+            })
+            return value;
+        }
+        catch (e) {
+            var err = e;
+            err = formula.errorInfo(err);
+            return [formula.error.v, err];
+        }
+    },
     "SUM": function() {
         //必要参数个数错误检测
         if (arguments.length < this.m[0] || arguments.length > this.m[1]) {

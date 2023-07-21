@@ -1,5 +1,27 @@
 export default [
     {
+        "n": "SUPER_FAR",
+        "t": "4",
+        "m": [
+            10,
+            2
+        ],
+        "p": [
+            {
+                "example": "http://10.30.35.83........",
+                "require": "m",
+                "repeat": "n",
+                "type": "rangeall"
+            },
+            {
+                "example": "2",
+                "require": "o",
+                "repeat": "y",
+                "type": "rangeall"
+            }
+        ]
+    },
+    {
         "n": "SUMIF",
         "t": 0,
         "m": [

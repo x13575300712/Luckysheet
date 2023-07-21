@@ -1,5 +1,19 @@
 export default {
     functionlist: {
+		SUPER_FAR: {
+            d: "Returns a conditional sum across a range.",
+            a: "A conditional sum across a range.",
+            p: [
+                {
+                    "name": "range",
+                    "detail": "The range which is tested against `criterion`."
+                },
+                {
+                    "name": "criterion",
+                    "detail": "The pattern or test to apply to `range`."
+                }
+            ]
+        },
         SUMIF: {
             d: "Returns a conditional sum across a range.",
             a: "A conditional sum across a range.",
