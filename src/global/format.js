@@ -475,11 +475,16 @@ var make_ssf = function make_ssf(SSF) {
     }
     var write_num = (function make_write_num() {
         var pct1 = /%/g;
-
         function write_num_pct(type, fmt, val) {
-            var sfmt = fmt.replace(pct1, ""),
+            var sfmt,mul
+            if(fmt.indexOf('%+') > -1){
+                sfmt = fmt.replace('%+',"")
+                mul = fmt.length - sfmt.length - 1;
+            }else{
+                sfmt = fmt.replace(pct1, "")
                 mul = fmt.length - sfmt.length;
-            return write_num(type, sfmt, val * Math.pow(10, 2 * mul)) + fill("%", mul);
+            }
+            return write_num(type, sfmt, val * Math.pow(10, 2 * mul)) + fill("%", mul === 0?1:mul);
         }
 
         function write_num_cm(type, fmt, val) {
@@ -684,9 +689,17 @@ var make_ssf = function make_ssf(SSF) {
         }
 
         function write_num_pct2(type, fmt, val) {
-            var sfmt = fmt.replace(pct1, ""),
+            // var sfmt = fmt.replace(pct1, ""),
+            //     mul = fmt.length - sfmt.length;
+            var sfmt,mul
+            if(fmt.indexOf('%+') > -1){
+                sfmt = fmt.replace('%+',"")
+                mul = fmt.length - sfmt.length - 1;
+            }else{
+                sfmt = fmt.replace(pct1, "")
                 mul = fmt.length - sfmt.length;
-            return write_num(type, sfmt, val * Math.pow(10, 2 * mul)) + fill("%", mul);
+            }
+            return write_num(type, sfmt, val * Math.pow(10, 2 * mul)) + fill("%", mul === 0? 1:mul);
         }
 
         function write_num_exp2(fmt, val) {
@@ -1288,6 +1301,7 @@ var make_ssf = function make_ssf(SSF) {
             } else {
                 myv = (v < 0 && flen > 1 ? -v : v);
                 ostr = write_num('n', nstr, myv);
+
                 if (myv < 0 && out[0] && out[0].t == 't') {
                     ostr = ostr.substr(1);
                     out[0].v = "-" + out[0].v;
@@ -1353,7 +1367,7 @@ var make_ssf = function make_ssf(SSF) {
         var retval = "";
         for (i = 0; i !== out.length; ++i)
             if (out[i] != null) retval += out[i].v;
-   
+
         return retval;
     }
     SSF._eval = eval_fmt;
@@ -1432,7 +1446,7 @@ var make_ssf = function make_ssf(SSF) {
                 break;
         }
 
-        //new runze 增加万 亿 格式  
+        //new runze 增加万 亿 格式
         //注："w":2万2500  "w0":2万2500  "w0.0":2万2500.2  "w0.00":2万2500.23......自定义精确度
         var reg = /^(w|W)((0?)|(0\.0+))$/;
         if(!!sfmt.match(reg)){
@@ -1448,7 +1462,7 @@ var make_ssf = function make_ssf(SSF) {
                 v = Math.abs(v);
             }
             var vInt = parseInt(v);
-             
+
             var vlength = vInt.toString().length;
             if( vlength> 4){
                 if(vlength > 8){
@@ -1467,7 +1481,7 @@ var make_ssf = function make_ssf(SSF) {
                     }
                     v = w + "万" + q;
                 }
-                
+
 
                 if(v.indexOf("亿0万0") != -1){
                     v = v.replace("0万0","");
@@ -1526,7 +1540,7 @@ var make_ssf = function make_ssf(SSF) {
                             break;
                     }
                     v = v.substring(0, v.indexOf("亿") + 1) + afterYi + v.substring(v.indexOf("万"))
-                    
+
 
                     if (afterWan.substring(0, 1) !== "." && afterWan != "") {
                         switch ((parseInt(afterWan) + "").length) {
@@ -1554,7 +1568,7 @@ var make_ssf = function make_ssf(SSF) {
             }else{
                 return v;
             }
-            
+
         }
 
 
@@ -1759,7 +1773,7 @@ function fuzzydate(s) {
 export function genarate(value) {//万 单位格式增加！！！
     var ret = [];
     var m = null, ct = {}, v = value;
-    
+
     if(value == null){
         return null;
     }
@@ -1811,7 +1825,7 @@ export function genarate(value) {//万 单位格式增加！！！
                 if(strlen > 5){
                     strlen = 5;
                 }
-                ct = { "fa": "#0."+ new Array(strlen + 1).join("0") +"E+00", "t": "n" }; 
+                ct = { "fa": "#0."+ new Array(strlen + 1).join("0") +"E+00", "t": "n" };
             }
             else{
                 ct = { "fa": "#0.E+00", "t": "n" };
@@ -1969,7 +1983,7 @@ export function genarate(value) {//万 单位格式增加！！！
         else{
             ct.fa = "yyyy-MM-dd";
         }
-        
+
         ct.t = "d";
         m = SSF.format(ct.fa, v);
     }
@@ -1998,7 +2012,7 @@ export function valueShowEs(r, c, d) {
     else{
         if (!isNaN(fuzzynum(value))){
             if(typeof(value) == "string" && value.indexOf("%") > -1){
-                
+
             }
             else{
                 value = getcellvalue(r, c, d, "v");

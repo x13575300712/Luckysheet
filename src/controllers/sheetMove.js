@@ -8,7 +8,7 @@ import pivotTable from './pivotTable';
 import Store from '../store';
 import server from './server';
 
-function luckysheetMoveEndCell(postion, type, isScroll, terminal, onlyvalue) {
+function luckysheetMoveEndCell(postion, type, isScroll, terminal, onlyvalue, toMax) {
     if (isScroll == null) {
         isScroll = true;
     }
@@ -80,7 +80,7 @@ function luckysheetMoveEndCell(postion, type, isScroll, terminal, onlyvalue) {
         }
     }
 
-    let datarowlen = Store.flowdata.length, 
+    let datarowlen = Store.flowdata.length,
         datacolumnlen = Store.flowdata[0].length;
 
     let data = Store.flowdata, moveP = "", moveV = 0;
@@ -130,7 +130,7 @@ function luckysheetMoveEndCell(postion, type, isScroll, terminal, onlyvalue) {
                     p_pre = p;
                 }
             }
-            
+
             moveP = "down";
             moveV = p_pre - curR;
         }
@@ -157,7 +157,7 @@ function luckysheetMoveEndCell(postion, type, isScroll, terminal, onlyvalue) {
                     else {
                         stvalue.push(true);
                     }
-                    
+
                     if (stvalue.length > 1) {
                         if (stvalue[i] == true && stvalue[i - 1] == false) {
                             p = r;
@@ -180,9 +180,12 @@ function luckysheetMoveEndCell(postion, type, isScroll, terminal, onlyvalue) {
                     p_pre = p;
                 }
             }
-            
+
             moveP = "down";
             moveV = p_pre - curR;
+            if(toMax){
+                moveV = datarowlen - curR;
+            }
         }
     }
     else if (postion == "left") {
@@ -229,7 +232,7 @@ function luckysheetMoveEndCell(postion, type, isScroll, terminal, onlyvalue) {
                     p_pre = p;
                 }
             }
-            
+
             moveP = "right";
             moveV = p_pre - curC;
         }
@@ -343,7 +346,7 @@ function luckysheetMoveHighlightCell(postion, index, type, isScroll) {
         postion == "down";
     }
 
-    let datarowlen = Store.flowdata.length, 
+    let datarowlen = Store.flowdata.length,
         datacolumnlen = Store.flowdata[0].length;
 
     let row, row_pre, row_index, row_index_ed;
@@ -351,13 +354,13 @@ function luckysheetMoveHighlightCell(postion, index, type, isScroll) {
 
     if(type == "rangeOfSelect"){
         let last = Store.luckysheet_select_save[Store.luckysheet_select_save.length - 1];
-        
+
         let curR;
         if(last["row_focus"] == null){
-            curR = last["row"][0];    
+            curR = last["row"][0];
         }
         else{
-            curR = last["row_focus"];    
+            curR = last["row_focus"];
         }
 
         let curC;
@@ -365,9 +368,9 @@ function luckysheetMoveHighlightCell(postion, index, type, isScroll) {
             curC = last["column"][0];
         }
         else{
-            curC = last["column_focus"];    
+            curC = last["column_focus"];
         }
-        
+
         //focus单元格 是否是合并单元格
         let margeset = menuButton.mergeborer(Store.flowdata, curR, curC);
         if(!!margeset){
@@ -439,16 +442,16 @@ function luckysheetMoveHighlightCell(postion, index, type, isScroll) {
             col_index_ed = margeset2.column[3];
         }
         else{
-            row = Store.visibledatarow[moveX]; 
+            row = Store.visibledatarow[moveX];
             row_pre = moveX - 1 == -1 ? 0 : Store.visibledatarow[moveX - 1];
             // row_index = moveX;
             // row_index_ed = moveX;
 
-            col = Store.visibledatacolumn[moveY]; 
+            col = Store.visibledatacolumn[moveY];
             col_pre = moveY - 1 == -1 ? 0 : Store.visibledatacolumn[moveY - 1];
             // col_index = moveY;
             // col_index_ed = moveY;
-            
+
             row_index = row_index_ed = curR;
             col_index = col_index_ed = curC;
         }
@@ -465,13 +468,13 @@ function luckysheetMoveHighlightCell(postion, index, type, isScroll) {
     }
     else if(type == "rangeOfFormula"){
         let last = formula.func_selectedrange;
-        
+
         let curR;
         if(last["row_focus"] == null){
-            curR = last["row"][0];    
+            curR = last["row"][0];
         }
         else{
-            curR = last["row_focus"];    
+            curR = last["row_focus"];
         }
 
         let curC;
@@ -479,9 +482,9 @@ function luckysheetMoveHighlightCell(postion, index, type, isScroll) {
             curC = last["column"][0];
         }
         else{
-            curC = last["column_focus"];    
+            curC = last["column_focus"];
         }
-        
+
         //focus单元格 是否是合并单元格
         let margeset = menuButton.mergeborer(Store.flowdata, curR, curC);
         if(!!margeset){
@@ -553,7 +556,7 @@ function luckysheetMoveHighlightCell(postion, index, type, isScroll) {
             col_index_ed = margeset2.column[3];
         }
         else{
-            row = Store.visibledatarow[moveX]; 
+            row = Store.visibledatarow[moveX];
             row_pre = moveX - 1 == -1 ? 0 : Store.visibledatarow[moveX - 1];
             row_index = moveX;
             row_index_ed = moveX;
@@ -626,7 +629,7 @@ function luckysheetMoveHighlightCell(postion, index, type, isScroll) {
 
     clearTimeout(Store.countfuncTimeout);
     countfunc();
-    
+
     // 移动单元格通知后台
     server.saveParam("mv", Store.currentSheetIndex, Store.luckysheet_select_save);
 }
@@ -786,7 +789,7 @@ function luckysheetMoveHighlightCell2(postion, type, isScroll) {
 
         row = Store.visibledatarow[rf];
         row_pre = rf - 1 == -1 ? 0 : Store.visibledatarow[rf - 1];
-        col = Store.visibledatacolumn[cf]; 
+        col = Store.visibledatacolumn[cf];
         col_pre = cf - 1 == -1 ? 0 : Store.visibledatacolumn[cf - 1];
 
         let top = row_pre, height = row - row_pre - 1;
@@ -885,7 +888,7 @@ function luckysheetMoveHighlightRange(postion, index, type, isScroll) {
         let curC = last["column"][0], endC = last["column"][1];
         let rf = last["row_focus"], cf = last["column_focus"];
 
-        let datarowlen = Store.flowdata.length, 
+        let datarowlen = Store.flowdata.length,
             datacolumnlen = Store.flowdata[0].length;
 
         if(postion == "down"){ //选区上下变动
@@ -1008,7 +1011,7 @@ function luckysheetMoveHighlightRange(postion, index, type, isScroll) {
                         curC += index;
                     }
                 }
-            } 
+            }
 
             if (endC >= datacolumnlen) {
                 endC = datacolumnlen - 1;
@@ -1030,9 +1033,9 @@ function luckysheetMoveHighlightRange(postion, index, type, isScroll) {
         let rowseleted = [curR, endR];
         let columnseleted = [curC, endC];
 
-        row = Store.visibledatarow[endR]; 
+        row = Store.visibledatarow[endR];
         row_pre = curR - 1 == -1 ? 0 : Store.visibledatarow[curR - 1];
-        col = Store.visibledatacolumn[endC]; 
+        col = Store.visibledatacolumn[endC];
         col_pre = curC - 1 == -1 ? 0 : Store.visibledatacolumn[curC - 1];
 
         let changeparam = menuButton.mergeMoveMain(columnseleted, rowseleted, last, row_pre, row - row_pre - 1, col_pre, col - col_pre - 1);
@@ -1057,7 +1060,7 @@ function luckysheetMoveHighlightRange(postion, index, type, isScroll) {
         let curC = last["column"][0], endC = last["column"][1];
         let rf = last["row_focus"], cf = last["column_focus"];
 
-        let datarowlen = Store.flowdata.length, 
+        let datarowlen = Store.flowdata.length,
             datacolumnlen = Store.flowdata[0].length;
 
         if(postion == "down"){ //选区上下变动
@@ -1180,7 +1183,7 @@ function luckysheetMoveHighlightRange(postion, index, type, isScroll) {
                         curC += index;
                     }
                 }
-            } 
+            }
 
             if (endC >= datacolumnlen) {
                 endC = datacolumnlen - 1;
@@ -1202,9 +1205,9 @@ function luckysheetMoveHighlightRange(postion, index, type, isScroll) {
         let rowseleted = [curR, endR];
         let columnseleted = [curC, endC];
 
-        row = Store.visibledatarow[endR]; 
+        row = Store.visibledatarow[endR];
         row_pre = curR - 1 == -1 ? 0 : Store.visibledatarow[curR - 1];
-        col = Store.visibledatacolumn[endC]; 
+        col = Store.visibledatacolumn[endC];
         col_pre = curC - 1 == -1 ? 0 : Store.visibledatacolumn[curC - 1];
 
         let top = row_pre, height = row - row_pre - 1;
@@ -1403,9 +1406,9 @@ function luckysheetMoveHighlightRange2(postion, type, isScroll) {
         let rowseleted = [r1, r2];
         let columnseleted = [c1, c2];
 
-        row = Store.visibledatarow[r2]; 
+        row = Store.visibledatarow[r2];
         row_pre = r1 - 1 == -1 ? 0 : Store.visibledatarow[r1 - 1];
-        col = Store.visibledatacolumn[c2]; 
+        col = Store.visibledatacolumn[c2];
         col_pre = c1 - 1 == -1 ? 0 : Store.visibledatacolumn[c1 - 1];
 
         let changeparam = menuButton.mergeMoveMain(columnseleted, rowseleted, last, row_pre, row - row_pre - 1, col_pre, col - col_pre - 1);
@@ -1534,9 +1537,9 @@ function luckysheetMoveHighlightRange2(postion, type, isScroll) {
         let rowseleted = [r1, r2];
         let columnseleted = [c1, c2];
 
-        row = Store.visibledatarow[r2]; 
+        row = Store.visibledatarow[r2];
         row_pre = r1 - 1 == -1 ? 0 : Store.visibledatarow[r1 - 1];
-        col = Store.visibledatacolumn[c2]; 
+        col = Store.visibledatacolumn[c2];
         col_pre = c1 - 1 == -1 ? 0 : Store.visibledatacolumn[c1 - 1];
 
         let top = row_pre, height = row - row_pre - 1;
@@ -1652,14 +1655,14 @@ function getRowMerge(rIndex, c1, c2){
         for(let r = rIndex; r >= r1; r--){
             for(let c = c1; c <= c2; c++){
                 let cell = Store.flowdata[r][c];
-                
+
                 if(getObjType(cell) == "object" && ("mc" in cell)){
                     let mc = Store.config["merge"][cell["mc"].r + "_" + cell["mc"].c];
 
                     if(str == null || mc.r < str){
                         str = mc.r;
                     }
-                }    
+                }
             }
 
             if(rowHasMerge(str - 1, c1, c2) && str > r1){
@@ -1679,7 +1682,7 @@ function getRowMerge(rIndex, c1, c2){
         for(let r = rIndex; r <= r2; r++){
             for(let c = c1; c <= c2; c++){
                 let cell = Store.flowdata[r][c];
-                
+
                 if(getObjType(cell) == "object" && ("mc" in cell)){
                     let mc = Store.config["merge"][cell["mc"].r + "_" + cell["mc"].c];
 
@@ -1711,14 +1714,14 @@ function getColMerge(cIndex, r1, r2){
         for(let c = cIndex; c >= c1; c--){
             for(let r = r1; r <= r2; r++){
                 let cell = Store.flowdata[r][c];
-                
+
                 if(getObjType(cell) == "object" && ("mc" in cell)){
                     let mc = Store.config["merge"][cell["mc"].r + "_" + cell["mc"].c];
 
                     if(str == null || mc.c < str){
                         str = mc.c;
                     }
-                }    
+                }
             }
 
             if(colHasMerge(str - 1, r1, r2) && str > c1){
@@ -1738,7 +1741,7 @@ function getColMerge(cIndex, r1, r2){
         for(let c = cIndex; c <= c2; c++){
             for(let r = r1; r <= r2; r++){
                 let cell = Store.flowdata[r][c];
-                
+
                 if(getObjType(cell) == "object" && ("mc" in cell)){
                     let mc = Store.config["merge"][cell["mc"].r + "_" + cell["mc"].c];
 

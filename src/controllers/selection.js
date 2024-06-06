@@ -16,6 +16,8 @@ import { replaceHtml, getObjType, luckysheetfontformat } from "../utils/util";
 import Store from "../store";
 import locale from "../locale/locale";
 import imageCtrl from "./imageCtrl";
+import luckysheetConfigsetting from "./luckysheetConfigsetting";
+import method from "../global/method";
 
 const selection = {
     clearcopy: function(e) {
@@ -669,7 +671,6 @@ const selection = {
                 );
             }
         }
-
         if (typeof data == "object") {
             if (data.length == 0) {
                 return;
@@ -691,7 +692,6 @@ const selection = {
                 maxh = minh + copyh - 1;
             let minc = Store.luckysheet_select_save[0].column[0], //应用范围首尾列
                 maxc = minc + copyc - 1;
-
             //应用范围包含部分合并单元格，则return提示
             let has_PartMC = false;
             if (cfg["merge"] != null) {
@@ -718,6 +718,19 @@ const selection = {
             //若应用范围超过最大行或最大列，增加行列
             let addr = maxh - rowMaxLength + 1,
                 addc = maxc - cellMaxLength + 1;
+
+            if(!luckysheetConfigsetting.rowAdd){
+                if(maxh > rowMaxLength - 1){
+                    maxh = rowMaxLength - 1
+                }
+                addr = 0
+            }
+            if(!luckysheetConfigsetting.columnAdd){
+                if(maxc > cellMaxLength - 1){
+                    maxc = cellMaxLength - 1
+                }
+                addc = 0
+            }
             if (addr > 0 || addc > 0) {
                 d = datagridgrowth([].concat(d), addr, addc, true);
             }
@@ -729,6 +742,9 @@ const selection = {
             let RowlChange = false;
             let offsetMC = {};
             for (let h = minh; h <= maxh; h++) {
+                if(h > maxh){
+                    break;
+                }
                 let x = [].concat(d[h]);
 
                 let currentRowLen = Store.defaultrowlen;
@@ -737,6 +753,9 @@ const selection = {
                 }
 
                 for (let c = minc; c <= maxc; c++) {
+                    if(c > maxc){
+                        break;
+                    }
                     if (getObjType(x[c]) == "object" && "mc" in x[c]) {
                         if ("rs" in x[c].mc) {
                             delete cfg["merge"][x[c]["mc"].r + "_" + x[c]["mc"].c];
@@ -802,7 +821,14 @@ const selection = {
             }
 
             Store.luckysheet_select_save = [{ row: [minh, maxh], column: [minc, maxc] }];
-
+            if(!method.createHookFunction(
+                "afterPasteData",
+                Store.luckysheet_select_save,
+                d,
+                cfg
+            )){
+                return
+            }
             if (addr > 0 || addc > 0 || RowlChange) {
                 let allParam = {
                     cfg: cfg,
@@ -858,6 +884,7 @@ const selection = {
 
             let addr = curR + rlen - d.length,
                 addc = curC + clen - d[0].length;
+
             if (addr > 0 || addc > 0) {
                 d = datagridgrowth([].concat(d), addr, addc, true);
             }
@@ -902,7 +929,13 @@ const selection = {
 
             last["row"] = [curR, curR + rlen - 1];
             last["column"] = [curC, curC + clen - 1];
-
+            if(!method.createHookFunction(
+                "afterPasteData",
+                Store.luckysheet_select_save,
+                d
+            )){
+                return
+            }
             if (addr > 0 || addc > 0) {
                 let allParam = {
                     RowlChange: true,
@@ -980,6 +1013,18 @@ const selection = {
 
         let addr = copyh + minh - rowMaxLength,
             addc = copyc + minc - cellMaxLength;
+        if(!luckysheetConfigsetting.rowAdd){
+            if(maxh > rowMaxLength - 1){
+                maxh = rowMaxLength - 1
+            }
+            addr = 0
+        }
+        if(!luckysheetConfigsetting.columnAdd){
+            if(maxc > cellMaxLength - 1){
+                maxc = cellMaxLength - 1
+            }
+            addc = 0
+        }
         if (addr > 0 || addc > 0) {
             d = datagridgrowth([].concat(d), addr, addc, true);
         }
@@ -1056,9 +1101,15 @@ const selection = {
 
         let offsetMC = {};
         for (let h = minh; h <= maxh; h++) {
+            if(h > maxh){
+                break
+            }
             let x = [].concat(d[h]);
 
             for (let c = minc; c <= maxc; c++) {
+                if(c > maxc){
+                    break
+                }
                 if (borderInfoCompute[c_r1 + h - minh + "_" + (c_c1 + c - minc)]) {
                     let bd_obj = {
                         rangeType: "cell",
@@ -1151,6 +1202,14 @@ const selection = {
             }
         }
 
+        if(!method.createHookFunction(
+            "afterPasteData",
+            Store.luckysheet_select_save,
+            d,
+            cfg
+        )){
+            return
+        }
         let source, target;
         if (Store.currentSheetIndex != copySheetIndex) {
             //跨表操作
@@ -1388,7 +1447,6 @@ const selection = {
                 },
             };
         }
-
         if (addr > 0 || addc > 0) {
             jfrefreshgrid_pastcut(source, target, true);
         } else {
@@ -1396,6 +1454,7 @@ const selection = {
         }
     },
     pasteHandlerOfCopyPaste: function(copyRange) {
+
         if (!checkProtectionLockedRangeList(Store.luckysheet_select_save, Store.currentSheetIndex)) {
             return;
         }
@@ -1513,6 +1572,18 @@ const selection = {
         //若应用范围超过最大行或最大列，增加行列
         let addr = copyh + minh - rowMaxLength,
             addc = copyc + minc - cellMaxLength;
+        if(!luckysheetConfigsetting.rowAdd){
+            if(maxh > rowMaxLength - 1){
+                maxh = rowMaxLength - 1
+            }
+            addr = 0
+        }
+        if(!luckysheetConfigsetting.columnAdd){
+            if(maxc > cellMaxLength - 1){
+                maxc = cellMaxLength - 1
+            }
+            addc = 0
+        }
         if (addr > 0 || addc > 0) {
             d = datagridgrowth([].concat(d), addr, addc, true);
         }
@@ -1542,9 +1613,15 @@ const selection = {
 
                 let offsetMC = {};
                 for (let h = mth; h < maxrowCache; h++) {
+                    if(h > maxh){
+                        break;
+                    }
                     let x = [].concat(d[h]);
 
                     for (let c = mtc; c < maxcellCahe; c++) {
+                        if(c > maxc){
+                            break;
+                        }
                         if (borderInfoCompute[c_r1 + h - mth + "_" + (c_c1 + c - mtc)]) {
                             let bd_obj = {
                                 rangeType: "cell",
@@ -1718,6 +1795,14 @@ const selection = {
         last["row"] = [minh, maxh];
         last["column"] = [minc, maxc];
 
+        if(!method.createHookFunction(
+            "afterPasteData",
+            Store.luckysheet_select_save,
+            d,
+            cfg
+        )){
+            return
+        }
         if (copyRowlChange || addr > 0 || addc > 0) {
             cfg = rowlenByRange(d, minh, maxh, cfg);
 

@@ -14,6 +14,7 @@ import { getObjType, replaceHtml } from '../utils/util';
 import Store from '../store';
 import locale from '../locale/locale';
 import dayjs from 'dayjs'
+import method from "../global/method";
 
 //选区下拉
 const luckysheetDropCell = {
@@ -358,7 +359,6 @@ const luckysheetDropCell = {
 
             $("#luckysheet-dropCell-typeList").css({"left": left, "top": top}).show();
             $("#luckysheet-dropCell-icon").mouseleave(function(){ $(this).css("backgroundColor", "#ffe8e8") });
-
             let type = _this.applyType;
             $("#luckysheet-dropCell-typeList .luckysheet-cols-menuitem[data-type="+ type +"]").find("span").append('<i class="fa fa-check luckysheet-mousedown-cancel"></i>');
             event.stopPropagation();
@@ -450,12 +450,21 @@ const luckysheetDropCell = {
 
         let direction = _this.direction;
         let type = _this.applyType;
-
         //复制范围
         let copyRange = _this.copyRange;
         let copy_str_r = copyRange["row"][0], copy_end_r = copyRange["row"][1];
         let copy_str_c = copyRange["column"][0], copy_end_c = copyRange["column"][1];
         let copyData = _this.getCopyData(d, copy_str_r, copy_end_r, copy_str_c, copy_end_c, direction);
+
+        let objType = {
+            type : type
+        }
+        if(!method.createHookFunction(
+            "cellDragTypeCheck",
+            objType,copy_str_c,copy_end_c
+        )){
+            _this.applyType = objType.type
+        }
 
         let csLen;
         if(direction == "down" || direction == "up"){
@@ -874,7 +883,13 @@ const luckysheetDropCell = {
                 }
             }
         }
-
+        if(!method.createHookFunction(
+            "afterDragData",
+            applyRange,
+            d
+        )){
+            return
+        }
         //刷新一次表格
         let allParam = {
             "cfg": cfg,
@@ -2333,7 +2348,7 @@ const luckysheetDropCell = {
             let last = data[data.length - 1]["m"];
             let match = last.match(reg)
             let lastTxt = match[match.length -1];
-            
+
             let num = Math.abs(Number(lastTxt) + step * i);
             let lastIndex = last.lastIndexOf(lastTxt);
             let valueTxt = last.substr(0, lastIndex) + num.toString() + last.substr(lastIndex + lastTxt.length);

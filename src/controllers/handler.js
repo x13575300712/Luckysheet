@@ -1868,6 +1868,7 @@ export default function luckysheetHandler() {
                     sheetFile,
                     moveState,
                     luckysheetTableContent,
+                    event
                 );
             }
             // }
@@ -4908,7 +4909,7 @@ export default function luckysheetHandler() {
 
     //选区拖动替换
     $("#luckysheet-cell-main div.luckysheet-cs-draghandle").mousedown(function(event) {
-        if (isEditMode() || Store.allowEdit === false) {
+        if (isEditMode() || Store.allowEdit === false || luckysheetConfigsetting.canMove === false) {
             //此模式下禁用选区拖动
             return;
         }
@@ -5125,7 +5126,11 @@ export default function luckysheetHandler() {
             e.stopPropagation();
         },
     );
-
+    $('#luckysheet-bottom-add-row-input').on("keydown",function(e){
+        if(e.keyCode === 13){
+            $("#luckysheet-bottom-add-row").click()
+        }
+    })
     //底部添加行按钮
     $("#luckysheet-bottom-add-row").on("click", function(e) {
         $("#luckysheet-rightclick-menu").hide();
@@ -5156,8 +5161,8 @@ export default function luckysheetHandler() {
             }
             return;
         }
-
         luckysheetextendtable("row", Store.flowdata.length - 1, value);
+        method.createHookFunction("rowAddAfter", value,Store.flowdata);
     });
 
     $("#luckysheet-bottom-return-top").on("click", function(e) {
@@ -5933,7 +5938,6 @@ export default function luckysheetHandler() {
             //此模式下禁用粘贴
             return;
         }
-
         if (selection.isPasteAction) {
             $("#luckysheet-rich-text-editor").blur();
             selection.isPasteAction = false;
@@ -5943,9 +5947,7 @@ export default function luckysheetHandler() {
                 // for chrome
                 clipboardData = e.originalEvent.clipboardData;
             }
-
             let txtdata = clipboardData.getData("text/html") || clipboardData.getData("text/plain");
-
             //如果标示是qksheet复制的内容，判断剪贴板内容是否是当前页面复制的内容
             let isEqual = true;
             if (
@@ -5990,13 +5992,22 @@ export default function luckysheetHandler() {
                 } else {
                     d = Store.luckysheetfile[getSheetIndex(copy_index)].data;
                 }
+                let contR = 0
+                let contC = 0
 
                 for (let r = copy_r1; r <= copy_r2; r++) {
                     if (r - copy_r1 > cpDataArr.length - 1) {
                         break;
                     }
-
+                    if (Store.config["rowhidden"] != null && Store.config["rowhidden"][r] != null) {
+                        contR++
+                        continue;
+                    }
                     for (let c = copy_c1; c <= copy_c2; c++) {
+                        if (Store.config["colhidden"] != null && Store.config["colhidden"][c] != null) {
+                            contC++
+                            continue;
+                        }
                         let cell = d[r][c];
                         let isInlineStr = false;
                         if (cell != null && cell.mc != null && cell.mc.rs == null) {
@@ -6022,7 +6033,7 @@ export default function luckysheetHandler() {
                             v = "";
                         }
                         if (isInlineStr) {
-                            const cpData = $(cpDataArr[r - copy_r1][c - copy_c1])
+                            const cpData = $(cpDataArr[r - copy_r1 - contR][c - copy_c1 - contC])
                                 .text()
                                 .replace(/\s|\n/g, " ");
                             const storeValue = v.replace(/\n/g, "").replace(/\s/g, " ");
@@ -6031,7 +6042,7 @@ export default function luckysheetHandler() {
                                 break;
                             }
                         } else {
-                            if (cpDataArr[r - copy_r1][c - copy_c1] != v) {
+                            if (cpDataArr[r - copy_r1 - contR][c - copy_c1 - contC] != v) {
                                 isEqual = false;
                                 break;
                             }

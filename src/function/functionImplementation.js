@@ -19,10 +19,19 @@ import dayjs from 'dayjs';
 import numeral from 'numeral';
 import {getAirTable,companyTargetData,companyTargetData10,companyTargetData11,companyTargetData12,excelToLuckyArray,excelToArray,askAIData} from '../demoData/getTargetData'
 import { setcellvalue } from "../global/setdata";
+import sheetmanage from "../controllers/sheetmanage";
 
 //公式函数计算
 const functionImplementation = {
     "SUPER_FAR": function() {
+        var currentIndex = window.luckysheetCurrentIndex;
+        var storeIndex = Store.currentSheetIndex
+        var cell_r = window.luckysheetCurrentRow;
+        var cell_c = window.luckysheetCurrentColumn;
+        if(storeIndex + '' !== currentIndex){ //不在当前页不计算公式
+            var d = [].concat(Store.luckysheetfile[currentIndex].data)
+            return d[cell_r][cell_c].v
+        }
         //必要参数个数错误检测
         if (arguments.length < this.m[1] || arguments.length > this.m[0]) {
             return formula.error.na;
@@ -47,11 +56,8 @@ const functionImplementation = {
         }else{
             return "#error 参数2需为数字"
         }
-        var cell_r = window.luckysheetCurrentRow;
-        var cell_c = window.luckysheetCurrentColumn;
         var cell_fp = window.luckysheetCurrentFunction;
-        var currentIndex = window.luckysheetCurrentIndex;
-        let userInfo = localStorage.getItem("userInfo")
+        let userInfo = localStorage.getItem("ipms2-userInfo")
         let luckyInitFlg = localStorage.getItem("luckyInitFlg")
         if(luckyInitFlg === 'true'){//远程公式不初始化
             var d = [].concat(Store.luckysheetfile[currentIndex].data)
@@ -60,7 +66,7 @@ const functionImplementation = {
         let userInfoObject = {}
         if(!userInfo){
             userInfoObject = {userInfo:{
-                token:123
+                token:'4ac8b6a3-4c79-46d1-94d7-7d13d2fa5156'
             }}
         }else{
             userInfoObject = JSON.parse(userInfo)
@@ -4737,7 +4743,7 @@ const functionImplementation = {
         }
     },
     "GET_TARGET": function() {
-        try {   
+        try {
                 var luckysheetCurrentIndex = window.luckysheetCurrentIndex;
                 var currentSheetIndex = Store.currentSheetIndex;
                 if(luckysheetCurrentIndex !== currentSheetIndex){
@@ -4745,7 +4751,7 @@ const functionImplementation = {
                 }
                 var startRow = window.luckysheetCurrentRow;
                 var startColumn = window.luckysheetCurrentColumn;
-                
+
                 // const {row, column} = Store.luckysheet_select_save[0];
                 // const startRow = row[0]
                 // const endRow = row[1]
@@ -4760,7 +4766,7 @@ const functionImplementation = {
 
                     const rowheight = startRow + target.length;
                     const colwidth = startColumn + target[0].length;
-                    
+
                     if(rowheight >= d.length && colwidth >= d[0].length){
                         d = datagridgrowth(d,rowheight - d.length + 1, colwidth - d[0].length + 1)
                     }else if(rowheight >= d.length){
@@ -4800,7 +4806,7 @@ const functionImplementation = {
                         let file = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)];
                         file.data = d
                     }
-                    
+
                 }, 300);
 
             return "loading...";
@@ -4855,7 +4861,7 @@ const functionImplementation = {
             getAirTable(url,sort_index,sort_order,(data)=>{
                 const rowheight = startRow + data.length;
                 const colwidth = startColumn + data[0].length;
-                
+
                 if(rowheight >= d.length && colwidth >= d[0].length){
                     d = datagridgrowth(d,rowheight - d.length + 1, colwidth - d[0].length + 1)
                 }else if(rowheight >= d.length){
@@ -4894,14 +4900,14 @@ const functionImplementation = {
                     let file = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)];
                     file.data = d
                 }
-                
-                
+
+
             },(e)=>{
                 var err = e;
                 err = formula.errorInfo(err);
                 return [formula.error.v, err];
             });
-            
+
         return "loading...";
     }
     catch (e) {
@@ -4924,7 +4930,7 @@ const functionImplementation = {
                 return formula.error.v;
             }
         }
-        try {   
+        try {
                 let luckysheetCurrentIndex = window.luckysheetCurrentIndex;
                 let currentSheetIndex = Store.currentSheetIndex;
                 if(luckysheetCurrentIndex !== currentSheetIndex){
@@ -4948,9 +4954,9 @@ const functionImplementation = {
                     // 默认是target数据
                     rangeData = excelToArray(companyTargetData)
                 }
-                
+
                 const companyTarget  = excelToArray(companyTargetData)
-                
+
 
                 let resultTable = askAIData(rangeData,companyTarget)
 
@@ -4965,7 +4971,7 @@ const functionImplementation = {
                     }else{
                         resultTable = excelToLuckyArray(companyTargetData11);
                     }
-                    
+
                 }
 
                 setTimeout(() => {
@@ -4973,7 +4979,7 @@ const functionImplementation = {
 
                     const rowheight = startRow + resultTable.length;
                     const colwidth = startColumn + resultTable[0].length;
-                    
+
                     if(rowheight >= d.length && colwidth >= d[0].length){
                         d = datagridgrowth(d,rowheight - d.length + 1, colwidth - d[0].length + 1)
                     }else if(rowheight >= d.length){
@@ -4981,7 +4987,7 @@ const functionImplementation = {
                     }else if(colwidth >= d[0].length){
                         d = datagridgrowth(d,0, colwidth - d[0].length + 1)
                     }
-                        
+
                     resultTable.forEach((row,r)=>{
                         row.forEach((cell,c)=>{
                             // d[startRow+r][startColumn+c] = Object.assign({},d[startRow+r][startColumn+c],cell)
@@ -4990,7 +4996,7 @@ const functionImplementation = {
                     })
                     d[startRow][startColumn].f = cell_fp
                     delete d[startRow][startColumn].m;
-                    
+
                     // 切换到包含远程公式的页之后300ms内又切换到其他页，不需要刷新，否则会导致公式页的数据刷到当前页
                     if(currentSheetIndex === Store.currentSheetIndex){
                         let file = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)];
@@ -5012,7 +5018,7 @@ const functionImplementation = {
                         let file = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)];
                         file.data = d
                     }
-                    
+
                 }, 300);
 
             return "loading...";

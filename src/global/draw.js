@@ -10,7 +10,7 @@ import { dynamicArrayCompute } from "./dynamicArray";
 import browser from "./browser";
 import { isRealNull, isRealNum } from "./validate";
 import { getMeasureText, getCellTextInfo } from "./getRowlen";
-import { getRealCellValue } from "./getdata";
+import { getRealCellValue,getcellvalue } from "./getdata";
 import { getBorderInfoComputeRange } from "./border";
 import { getSheetIndex } from "../methods/get";
 import { getObjType, chatatABC, luckysheetfontformat } from "../utils/util";
@@ -535,7 +535,8 @@ function luckysheetDrawMain(
     let bodrder05 = 0.5; //Default 0.5
 
     // 钩子函数
-    method.createHookFunction("cellAllRenderBefore", Store.flowdata, sheetFile, luckysheetTableContent);
+    method.createHookFunction("cellAllRenderBefore", Store.flowdata, sheetFile, luckysheetTableContent,
+        Store.config["rowhidden"],Store.config["colhidden"],dataset_row_st,dataset_row_ed,dataset_col_st,dataset_col_ed);
 
     for (let r = dataset_row_st; r <= dataset_row_ed; r++) {
         let start_r;
@@ -1275,6 +1276,8 @@ let nullCellRender = function(
     ];
 
     //单元格渲染前，考虑到合并单元格会再次渲染一遍，统一放到这里
+    let cellWidth = end_c - start_c - 2;
+    let cellHeight = end_r - start_r - 2;
     if (
         !method.createHookFunction(
             "cellRenderBefore",
@@ -1286,6 +1289,8 @@ let nullCellRender = function(
                 start_c: cellsize[0],
                 end_r: cellsize[3] + cellsize[1],
                 end_c: cellsize[2] + cellsize[0],
+                cellWidth,
+                cellHeight,
             },
             sheetmanage.getSheetByIndex(),
             luckysheetTableContent,
@@ -1388,6 +1393,8 @@ let nullCellRender = function(
             start_c: cellsize[0],
             end_r: cellsize[3] + cellsize[1],
             end_c: cellsize[2] + cellsize[0],
+            cellWidth,
+            cellHeight,
         },
         sheetmanage.getSheetByIndex(),
         luckysheetTableContent,
@@ -1417,7 +1424,7 @@ let cellRender = function(
     isMerge,
 ) {
     let cell = Store.flowdata[r][c];
-    let cellWidth = end_c - start_c - 2;
+    let cellWidth = end_c - start_c - 2 - 1;
     let cellHeight = end_r - start_r - 2;
     let space_width = 2,
         space_height = 2; //宽高方向 间隙
@@ -1473,6 +1480,8 @@ let cellRender = function(
                 start_c: cellsize[0],
                 end_r: cellsize[3] + cellsize[1],
                 end_c: cellsize[2] + cellsize[0],
+                cellWidth:cellWidth + 1,
+                cellHeight,
             },
             sheetmanage.getSheetByIndex(),
             luckysheetTableContent,
@@ -1484,11 +1493,11 @@ let cellRender = function(
     luckysheetTableContent.fillRect(cellsize[0], cellsize[1], cellsize[2], cellsize[3]);
 
     let dataVerification = dataVerificationCtrl.dataVerification;
-
+    let vValue = getcellvalue(r,c)
     if (
         dataVerification != null &&
         dataVerification[r + "_" + c] != null &&
-        !dataVerificationCtrl.validateCellData(value, dataVerification[r + "_" + c])
+        !dataVerificationCtrl.validateCellData(vValue?vValue:value, dataVerification[r + "_" + c])
     ) {
         //单元格左上角红色小三角标示
         let dv_w = 5 * Store.zoomRatio,
@@ -1756,7 +1765,6 @@ let cellRender = function(
             r: r,
             c: c,
         });
-
         //若单元格有条件格式图标集
         if (checksCF != null && checksCF["icons"] != null && textInfo.type == "plain") {
             let l = checksCF["icons"]["left"];
@@ -1848,7 +1856,6 @@ let cellRender = function(
         luckysheetTableContent.stroke();
         luckysheetTableContent.closePath();
     }
-
     // 单元格渲染后
     method.createHookFunction(
         "cellRenderAfter",
@@ -1860,6 +1867,8 @@ let cellRender = function(
             start_c: cellsize[0],
             end_r: cellsize[3] + cellsize[1],
             end_c: cellsize[2] + cellsize[0],
+            cellWidth:cellWidth + 1,
+            cellHeight,
         },
         sheetmanage.getSheetByIndex(),
         luckysheetTableContent,

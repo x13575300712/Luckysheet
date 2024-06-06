@@ -721,6 +721,10 @@ const sheetmanage = {
         if (file.data && file.data.length > 0) {
             for (let i = 0; i < data.length; i++) {
                 for (let j = 0; j < data[0].length; j++) {
+                    const fa = data[i][j]?.ct?.fa
+                    if(fa && fa.indexOf('%+') > -1 && data[i][j].v){
+                        data[i][j].v = data[i][j].v * 100;
+                    }
                     setcellvalue(i, j, data, data[i][j]);
                 }
             }
@@ -737,6 +741,10 @@ const sheetmanage = {
                     }
                     if (c >= data[0].length) {
                         data = datagridgrowth(data, 0, c - data[0].length + 1);
+                    }
+                    const fa = v?.ct?.fa
+                    if(fa && fa.indexOf('%+') > -1 && v.v){
+                        v.v = v.v * 100;
                     }
                     setcellvalue(r, c, data, v);
                 }
@@ -1479,7 +1487,7 @@ const sheetmanage = {
         }
 
         let ret = pivotTable.dataHandler(column, row, values, showType, newdata);
-        
+
         pivotTableConfig.pivotDatas = ret
 
 
@@ -1487,10 +1495,10 @@ const sheetmanage = {
         let data = d;
 
         let addr = 0, addc = 0;
-        let rlen = ret.length, 
+        let rlen = ret.length,
                 clen = ret[0].length;
 
-            addr = rlen - d.length; 
+            addr = rlen - d.length;
             addc = clen - d[0].length;
 
             data = datagridgrowth(d, addr + 20, addc + 10, true);
@@ -1652,13 +1660,13 @@ const sheetmanage = {
         Store.scrollRefreshSwitch = false;
 
         if (file["scrollLeft"] != null && file["scrollLeft"] > 0) {
-            $("#luckysheet-scrollbar-x").scrollLeft(file["scrollLeft"] * Store.zoomRatio);
+            $("#luckysheet-scrollbar-x").scrollLeft(file["scrollLeft"] );// 20240407注释无需乘缩放 * Store.zoomRatio
         } else {
             $("#luckysheet-scrollbar-x").scrollLeft(0);
         }
 
         if (file["scrollTop"] != null && file["scrollTop"] > 0) {
-            $("#luckysheet-scrollbar-y").scrollTop(file["scrollTop"] * Store.zoomRatio);
+            $("#luckysheet-scrollbar-y").scrollTop(file["scrollTop"]);// 20240407注释无需乘缩放 * Store.zoomRatio
         } else {
             $("#luckysheet-scrollbar-y").scrollTop(0);
         }

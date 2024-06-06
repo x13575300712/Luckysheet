@@ -10,6 +10,7 @@ function setcellvalue(r, c, d, v) {
     if (d == null) {
         d = Store.flowdata;
     }
+    // console.log(r, c, d, v)
     // 若采用深拷贝，初始化时的单元格属性丢失
     // let cell = $.extend(true, {}, d[r][c]);
     let cell = d[r][c];
@@ -40,8 +41,18 @@ function setcellvalue(r, c, d, v) {
         } else {
             vupdate = v.v;
         }
+        // const fa = cell?.ct?.fa
+        // if(fa && fa.indexOf('%+')>-1 && cell.v === vupdate){
+        //     vupdate = vupdate * 100;
+        //     debugger
+        // }
     } else {
-        vupdate = v;
+       vupdate = v;
+        // const fa = cell?.ct?.fa
+        // if(fa && fa.indexOf('%+')>-1 && cell.v === vupdate){
+        //     vupdate = vupdate * 100;
+        //     debugger
+        // }
     }
 
     // fix #81， vupdate = ''
@@ -65,7 +76,6 @@ function setcellvalue(r, c, d, v) {
     }
 
     let vupdateStr = vupdate.toString();
-
     if (vupdateStr.substr(0, 1) == "'") {
         cell.m = vupdateStr.substr(1);
         cell.ct = { fa: "@", t: "s" };
@@ -84,7 +94,9 @@ function setcellvalue(r, c, d, v) {
         cell.ct = { fa: "General", t: "b" };
         cell.v = false;
     } else if (vupdateStr.substr(-1) === "%" && isRealNum(vupdateStr.substring(0, vupdateStr.length - 1))) {
-        cell.ct = { fa: "0%", t: "n" };
+        if (cell.ct && cell.ct.fa && cell.ct.fa.indexOf('%+') === -1){
+            cell.ct = { fa: "0%", t: "n" };
+        }
         cell.v = vupdateStr.substring(0, vupdateStr.length - 1) / 100;
         cell.m = vupdate;
     } else if (valueIsError(vupdate)) {
@@ -106,8 +118,11 @@ function setcellvalue(r, c, d, v) {
             if (cell.ct == null) {
                 cell.ct = { fa: "General", t: "n" };
             }
-
-            if (cell.v == Infinity || cell.v == -Infinity) {
+            if (cell.ct.fa.indexOf('%+') > -1){
+                let mask = update(cell.ct.fa, vupdate/100);
+                cell.m = mask[0];
+                cell.v = vupdate/100;
+            }else if (cell.v == Infinity || cell.v == -Infinity) {
                 cell.m = cell.v.toString();
             } else {
                 if (cell.v.toString().indexOf("e") > -1) {
@@ -145,19 +160,23 @@ function setcellvalue(r, c, d, v) {
             if (isRealNum(vupdate)) {
                 vupdate = parseFloat(vupdate);
             }
+            if (cell.ct.fa.indexOf('%+') > -1){
+                let mask = update(cell.ct.fa, vupdate/100);
+                cell.m = mask;
+                cell.v = vupdate/100;
+            }else{
+                let mask = update(cell.ct.fa, vupdate);
+                if (mask === vupdate) {
+                    //若原来单元格格式 应用不了 要更新的值，则获取更新值的 格式
+                    mask = genarate(vupdate);
 
-            let mask = update(cell.ct.fa, vupdate);
-
-            if (mask === vupdate) {
-                //若原来单元格格式 应用不了 要更新的值，则获取更新值的 格式
-                mask = genarate(vupdate);
-
-                cell.m = mask[0].toString();
-                cell.ct = mask[1];
-                cell.v = mask[2];
-            } else {
-                cell.m = mask.toString();
-                cell.v = vupdate;
+                    cell.m = mask[0].toString();
+                    cell.ct = mask[1];
+                    cell.v = mask[2];
+                } else {
+                    cell.m = mask.toString();
+                    cell.v = vupdate;
+                }
             }
         } else {
             if (

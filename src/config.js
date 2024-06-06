@@ -67,4 +67,8 @@ export default {
     cellRightClickConfig:{}, //自定义单元格右键菜单
     sheetRightClickConfig:{}, //自定义底部sheet页右击菜单
     imageUpdateMethodConfig:{}, //自定义图片同步方式
+    rowAdd:true, //复制能否增加行
+    columnAdd:true, //复制能否增加列
+    frozenDrop:true, //能否通过拖动来改变固定行列
+    canMove:true, //是否能够通过拖动来改变单元格的值
 }

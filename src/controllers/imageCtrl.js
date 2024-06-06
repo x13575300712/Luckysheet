@@ -43,11 +43,11 @@ const imageCtrl = {
     currentImgId: null,
     currentWinW: null,
     currentWinH: null,
-    resize: null,  
+    resize: null,
     resizeXY: null,
     move: false,
     moveXY: null,
-    cropChange: null,  
+    cropChange: null,
     cropChangeXY: null,
     cropChangeObj: null,
     copyImgItemObj: null,
@@ -75,7 +75,7 @@ const imageCtrl = {
 
     _insertImg: function(src){
         let _this = this;
-        
+
         let last = Store.luckysheet_select_save[Store.luckysheet_select_save.length - 1];
         let rowIndex = last.row_focus || 0;
         let colIndex = last.column_focus || 0;
@@ -227,7 +227,7 @@ const imageCtrl = {
         $("#luckysheet-modal-dialog-slider-imageCtrl #imgItemBorderRadius").val(border.radius);
         $("#luckysheet-modal-dialog-slider-imageCtrl #imgItemBorderStyle").val(border.style);
         $("#luckysheet-modal-dialog-slider-imageCtrl #imgItemBorderColor span").css("background-color", border.color).attr("title", border.color);
-    
+
         _this.init();
     },
     colorSelectDialog: function(currenColor){
@@ -239,31 +239,31 @@ const imageCtrl = {
         $("#luckysheet-modal-dialog-mask").show();
         $("#luckysheet-imageCtrl-colorSelect-dialog").remove();
 
-        $("body").append(replaceHtml(modelHTML, { 
-            "id": "luckysheet-imageCtrl-colorSelect-dialog", 
-            "addclass": "luckysheet-imageCtrl-colorSelect-dialog", 
-            "title": locale_imageCtrl.borderTile, 
+        $("body").append(replaceHtml(modelHTML, {
+            "id": "luckysheet-imageCtrl-colorSelect-dialog",
+            "addclass": "luckysheet-imageCtrl-colorSelect-dialog",
+            "title": locale_imageCtrl.borderTile,
             "content": `<div class="currenColor">
                             ${locale_imageCtrl.borderCur}:<span title="${currenColor}" style="background-color:${currenColor}"></span>
                         </div>
-                        <div class="colorshowbox"></div>`, 
+                        <div class="colorshowbox"></div>`,
             "botton":  `<button id="luckysheet-imageCtrl-colorSelect-dialog-confirm" class="btn btn-primary">${locale_button.confirm}</button>
-                        <button class="btn btn-default luckysheet-model-close-btn">${locale_button.cancel}</button>`, 
-            "style": "z-index:100003" 
+                        <button class="btn btn-default luckysheet-model-close-btn">${locale_button.cancel}</button>`,
+            "style": "z-index:100003"
         }));
         let $t = $("#luckysheet-imageCtrl-colorSelect-dialog")
                 .find(".luckysheet-modal-dialog-content")
                 .css("min-width", 300)
-                .end(), 
-            myh = $t.outerHeight(), 
+                .end(),
+            myh = $t.outerHeight(),
             myw = $t.outerWidth();
         let winw = $(window).width(), winh = $(window).height();
         let scrollLeft = $(document).scrollLeft(), scrollTop = $(document).scrollTop();
-        $("#luckysheet-imageCtrl-colorSelect-dialog").css({ 
-            "left": (winw + scrollLeft - myw) / 2, 
-            "top": (winh + scrollTop - myh) / 3 
+        $("#luckysheet-imageCtrl-colorSelect-dialog").css({
+            "left": (winw + scrollLeft - myw) / 2,
+            "top": (winh + scrollTop - myh) / 3
         }).show();
-        
+
         //初始化选择颜色插件
         $("#luckysheet-imageCtrl-colorSelect-dialog").find(".colorshowbox").spectrum({
             showPalette: true,
@@ -349,7 +349,7 @@ const imageCtrl = {
             _this.colorSelectDialog(currenColor);
         })
 
-        //边框选择颜色 确定 
+        //边框选择颜色 确定
         $(document).off("click.selectColorConfirm").on("click.selectColorConfirm", "#luckysheet-imageCtrl-colorSelect-dialog-confirm", function(){
             let $parent = $(this).parents("#luckysheet-imageCtrl-colorSelect-dialog");
             $("#luckysheet-modal-dialog-mask").hide();
@@ -358,12 +358,12 @@ const imageCtrl = {
             let currenColor = $parent.find(".currenColor span").attr("title");
             $("#luckysheet-modal-dialog-slider-imageCtrl #imgItemBorderColor span").css("background-color", currenColor).attr("title", currenColor);
 
-            _this.configChange("border-color", currenColor);            
+            _this.configChange("border-color", currenColor);
         });
 
         //image active
         $("#luckysheet-image-showBoxs").off("mousedown.active").on("mousedown.active", ".luckysheet-modal-dialog-image", function(e) {
-            
+
 
             if(!checkProtectionAuthorityNormal(Store.currentSheetIndex, "editObjects",false)){
                 return;
@@ -386,7 +386,7 @@ const imageCtrl = {
             let left = imgItemParam.left;
             let top = imgItemParam.top;
             let position = imgItemParam.position;
-        
+
             $("#luckysheet-modal-dialog-activeImage").show().css({
                 "width": width,
                 "height": height,
@@ -423,21 +423,21 @@ const imageCtrl = {
             if(!checkProtectionAuthorityNormal(Store.currentSheetIndex, "editObjects",false)){
                 return;
             }
-            
+
             if(!$("#luckysheet-modal-dialog-slider-imageCtrl").is(":visible")){
                 _this.sliderHtmlShow();
             }
-            
+
             _this.move = true;
-            
+
             _this.currentWinW = $("#luckysheet-cell-main")[0].scrollWidth;
             _this.currentWinH = $("#luckysheet-cell-main")[0].scrollHeight;
 
             let offset = $("#luckysheet-modal-dialog-activeImage").offset();
 
             _this.moveXY = [
-                e.pageX - offset.left, 
-                e.pageY - offset.top, 
+                e.pageX - offset.left,
+                e.pageY - offset.top,
             ];
 
             setluckysheet_scroll_status(true);
@@ -450,13 +450,13 @@ const imageCtrl = {
             if(!checkProtectionAuthorityNormal(Store.currentSheetIndex, "editObjects",false)){
                 return;
             }
-            
+
             _this.currentWinW = $("#luckysheet-cell-main")[0].scrollWidth;
             _this.currentWinH = $("#luckysheet-cell-main")[0].scrollHeight;
 
             _this.resize = $(this).data("type");
 
-            let scrollTop = $("#luckysheet-cell-main").scrollTop(), 
+            let scrollTop = $("#luckysheet-cell-main").scrollTop(),
                 scrollLeft = $("#luckysheet-cell-main").scrollLeft();
             let mouse = mouseposition(e.pageX, e.pageY);
             let x = mouse[0] + scrollLeft;
@@ -467,18 +467,18 @@ const imageCtrl = {
             let height = $("#luckysheet-modal-dialog-activeImage").height();
 
             _this.resizeXY = [
-                x, 
-                y, 
-                width, 
-                height, 
-                position.left + scrollLeft, 
-                position.top + scrollTop, 
-                scrollLeft, 
+                x,
+                y,
+                width,
+                height,
+                position.left + scrollLeft,
+                position.top + scrollTop,
+                scrollLeft,
                 scrollTop
             ];
 
             setluckysheet_scroll_status(true);
-            
+
             e.stopPropagation();
         })
 
@@ -498,19 +498,19 @@ const imageCtrl = {
         $("#luckysheet-modal-dialog-cropping").off("mousedown.cropChange").on("mousedown.cropChange", ".resize-item", function(e) {
             _this.cropChange = $(this).data("type");
 
-            let scrollTop = $("#luckysheet-cell-main").scrollTop(), 
+            let scrollTop = $("#luckysheet-cell-main").scrollTop(),
                 scrollLeft = $("#luckysheet-cell-main").scrollLeft();
             let mouse = mouseposition(e.pageX, e.pageY);
             let x = mouse[0] + scrollLeft;
             let y = mouse[1] + scrollTop;
 
             _this.cropChangeXY = [
-                x, 
+                x,
                 y
             ];
 
             setluckysheet_scroll_status(true);
-            
+
             e.stopPropagation();
         })
 
@@ -544,7 +544,7 @@ const imageCtrl = {
                 let left = imgItemParam.left;
                 let top = imgItemParam.top;
                 let position = imgItemParam.position;
-            
+
                 $("#luckysheet-modal-dialog-activeImage").show().css({
                     "width": width,
                     "height": height,
@@ -576,7 +576,7 @@ const imageCtrl = {
                 $("#luckysheet-modal-dialog-activeImage .luckysheet-modal-dialog-border").css("border-color", value);
                 break;
         }
-        
+
         _this.ref();
     },
     getImgItemParam(imgItem){
@@ -638,7 +638,8 @@ const imageCtrl = {
             "height": height,
             "left": left,
             "top": top,
-            "position": position
+            "position": position,
+            "visibility":"visible"
         });
         $("#" + _this.currentImgId + " img").css({
             "width": imgItem.default.width * Store.zoomRatio,
@@ -689,7 +690,7 @@ const imageCtrl = {
         imgItem.crop.width = width;
         imgItem.crop.height = height;
 
-        let scrollTop = $("#luckysheet-cell-main").scrollTop(), 
+        let scrollTop = $("#luckysheet-cell-main").scrollTop(),
             scrollLeft = $("#luckysheet-cell-main").scrollLeft();
 
         imgItem.fixedLeft = img.left - scrollLeft + Store.rowHeaderWidth;
@@ -714,9 +715,9 @@ const imageCtrl = {
         let item = _this.images[_this.currentImgId];
 
 		var zoomRatio = Store.zoomRatio;
-		
+
         if(item.isFixedPos){
-			
+
             item.fixedLeft = (obj.offsetLeft - item.crop.offsetLeft) / zoomRatio;
             item.fixedTop = (obj.offsetTop - item.crop.offsetTop) / zoomRatio;
         }
@@ -731,7 +732,7 @@ const imageCtrl = {
         let _this = this;
 
         _this.resize = null;
-		
+
 		var zoomRatio = Store.zoomRatio;
 
         let obj = $("#luckysheet-modal-dialog-activeImage")[0];
@@ -778,7 +779,7 @@ const imageCtrl = {
         let left = imgItemParam.left;
         let top = imgItemParam.top;
         let position = imgItemParam.position;
-    
+
         $("#luckysheet-modal-dialog-cropping").show().css({
             "width": width,
             "height": height,
@@ -878,7 +879,7 @@ const imageCtrl = {
         let left = imgItemParam.left;
         let top = imgItemParam.top;
         let position = imgItemParam.position;
-        
+
         $("#luckysheet-modal-dialog-activeImage").show().css({
             "width": width,
             "height": height,
@@ -906,7 +907,7 @@ const imageCtrl = {
         if(!method.createHookFunction('imageDeleteBefore', imgItem)){
             return;
         }
-        
+
         $("#luckysheet-modal-dialog-activeImage").hide();
         $("#luckysheet-modal-dialog-cropping").hide();
         $("#luckysheet-modal-dialog-slider-imageCtrl").hide();
@@ -940,8 +941,8 @@ const imageCtrl = {
             document.execCommand("selectAll");
             document.execCommand("Copy");
             // 等50毫秒，keyPress事件发生了再去处理数据
-            setTimeout(function () { 
-                $("#luckysheet-copy-content").blur(); 
+            setTimeout(function () {
+                $("#luckysheet-copy-content").blur();
             }, 10);
         }
         else {
@@ -962,11 +963,11 @@ const imageCtrl = {
         let top = rowIndex == 0 ? 0 : Store.visibledatarow[rowIndex - 1];
 
         let img = $.extend(true, {}, _this.copyImgItemObj);
-        
+
         img.default.left = left - img.crop.offsetLeft;
         img.default.top = top - img.crop.offsetTop;
 
-        let scrollTop = $("#luckysheet-cell-main").scrollTop(), 
+        let scrollTop = $("#luckysheet-cell-main").scrollTop(),
             scrollLeft = $("#luckysheet-cell-main").scrollLeft();
 
         img.fixedLeft = img.default.left - scrollLeft + Store.rowHeaderWidth;
@@ -984,7 +985,7 @@ const imageCtrl = {
     },
     allImagesShow: function() {
         let _this = this;
-        
+
         $("#luckysheet-modal-dialog-activeImage").hide();
         $("#luckysheet-modal-dialog-cropping").hide();
         $("#luckysheet-modal-dialog-slider-imageCtrl").hide();
@@ -1005,10 +1006,10 @@ const imageCtrl = {
         let images = $.extend(true, {}, _this.images);
 
         if(rc == "row"){
-            let row = Store.visibledatarow[index], 
+            let row = Store.visibledatarow[index],
                 row_pre = index - 1 == -1 ? 0 : Store.visibledatarow[index - 1];
             let changeSize = size - (row - row_pre - 1);
-            
+
             for(let imgId in images){
                 let imgItem = images[imgId];
                 let imgItemParam = _this.getImgItemParam(imgItem);
@@ -1062,7 +1063,7 @@ const imageCtrl = {
             }
         }
         else if(rc == "column"){
-            let col = Store.visibledatacolumn[index], 
+            let col = Store.visibledatacolumn[index],
                 col_pre = index - 1 == -1 ? 0 : Store.visibledatacolumn[index - 1];
             let changeSize = size - (col - col_pre - 1);
 

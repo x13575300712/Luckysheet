@@ -39,6 +39,11 @@ const luckysheetConfigsetting = {
 
     defaultTextColor: '#000',
     defaultCellColor: '#fff',
+
+    rowAdd:true, //复制能否增加行
+    columnAdd:true, //复制能否增加列
+    frozenDrop:true, //能否通过拖动来改变固定行列
+    canMove:true, //是否能够通过拖动来改变单元格的值
 }
 
 export default luckysheetConfigsetting;

@@ -1302,33 +1302,89 @@ const dataVerificationCtrl = {
         let type = item.type,
             type2 = item.type2,
             value1 = item.value1,
-            value2 = item.value2;
-
+            value2 = item.value2,
+            value3 = item.value3;
         if(type == 'dropdown'){
-            let list = _this.getDropdownList(value1);
-
-            // 多选的情况 检查每个都在下拉列表中
-            if(type2 && cellValue){
-                return cellValue.split(',').every(function (i) {
-                    return list.indexOf(i) !== -1;
-                });
-            }
-
-            let result = false;
-
-            for(let i = 0; i < list.length; i++){
-                if(list[i] == cellValue){
-                    result = true;
-                    break;
+            if(!item.remote){
+                let list = _this.getDropdownList(value1,null);
+                // 多选的情况 检查每个都在下拉列表中
+                if(type2 && cellValue){
+                    return cellValue.split(',').every(function (i) {
+                        return list.indexOf(i) !== -1;
+                    });
+                }
+                let result = false;
+                for(let i = 0; i < list.length; i++){
+                    if(list[i] == cellValue){
+                        result = true;
+                        break;
+                    }
+                }
+                return result;
+            }else{
+                if( typeof value3 === "function" && typeof value3.nodeType !== "number"){
+                    let flg = isAsyncFunction(value3)
+                    if(flg){
+                        // debugger
+                        // let time = new Date().getTime()
+                        // let resultDealFlg = true
+                        // let result = false;
+                        // value3(cellValue).then((orgList)=>{
+                        //     let list = []
+                        //     for(let obj of orgList){
+                        //         list.push(obj.value)
+                        //     }
+                        //
+                        //     // 多选的情况 检查每个都在下拉列表中
+                        //     if(type2 && cellValue){
+                        //         return cellValue.split(',').every(function (i) {
+                        //             return list.indexOf(i) !== -1;
+                        //         });
+                        //     }
+                        //     for(let i = 0; i < list.length; i++){
+                        //         if(list[i] === cellValue){
+                        //             result = true;
+                        //             break;
+                        //         }
+                        //     }
+                        //     resultDealFlg = false
+                        // })
+                        // while(resultDealFlg){
+                        //     let newTime = new Date().getTime()
+                        //     if(newTime - time > 10000){
+                        //         break
+                        //     }
+                        // }
+                        return true;
+                    }else{
+                        let orgList = value3(cellValue)
+                        let list = []
+                        for(let obj of orgList){
+                            list.push(obj.value)
+                        }
+                        // 多选的情况 检查每个都在下拉列表中
+                        if(type2 && cellValue){
+                            return cellValue.split(',').every(function (i) {
+                                return list.indexOf(i) !== -1;
+                            });
+                        }
+                        let result = false;
+                        for(let i = 0; i < list.length; i++){
+                            if(list[i] == cellValue){
+                                result = true;
+                                break;
+                            }
+                        }
+                        return result;
+                    }
                 }
             }
-
-            return result;
         }
         else if(type == 'checkbox'){
 
         }
         else if(type == 'number' || type == 'number_integer' || type == 'number_decimal'){
+
             if(!isRealNum(cellValue)){
                 return false;
             }
@@ -1505,23 +1561,28 @@ const dataVerificationCtrl = {
         }
 
         let item = _this.dataVerification[rowIndex + '_' + colIndex];
-        if(item.type !== 'dropdown'){
+        if(!item || item.type !== 'dropdown'){
             return
         }
-        let list = _this.getDropdownList(item.value1,searchText);
         let optionHtml = '';
-        if (item.type === 'dropdown' && item.type2) {
-            // 下拉多选的情况下 将已经选择的标出来
-            let cellValue = getcellvalue(rowIndex, colIndex, null);
-            let valueArr = isRealNull(cellValue) ? [] : cellValue.split(',');
-            list.forEach(i => {
-                let checked = valueArr.indexOf(i) !== -1;
-                optionHtml += `<div class="dropdown-List-item  luckysheet-mousedown-cancel multi${checked ? ' checked': ''}">${i}</div>`;
-            });
-        } else {
-            list.forEach(i => {
-                optionHtml += `<div class="dropdown-List-item luckysheet-mousedown-cancel">${i}</div>`;
-            });
+        if(!item.remote){
+            let list = _this.getDropdownList(item.value1,searchText);
+            if (item.type === 'dropdown' && item.type2) {
+                // 下拉多选的情况下 将已经选择的标出来
+                let cellValue = getcellvalue(rowIndex, colIndex, null);
+                let valueArr = isRealNull(cellValue) ? [] : cellValue.split(',');
+                list.forEach(i => {
+                    let checked = valueArr.indexOf(i) !== -1;
+                    optionHtml += `<div class="dropdown-List-item  luckysheet-mousedown-cancel multi${checked ? ' checked': ''}">${i}</div>`;
+                });
+            } else {
+                list.forEach(i => {
+                    optionHtml += `<div class="dropdown-List-item luckysheet-mousedown-cancel">${i}</div>`;
+                });
+            }
+        }else{
+            _this.getDropdownList(item.value1,searchText,item.value3);
+            optionHtml = optionHtml += `<div >远程列表加载中.....</div>`;
         }
 
         let clientHeight = $("#luckysheet-cell-main")[0].clientHeight;
@@ -1563,53 +1624,105 @@ const dataVerificationCtrl = {
         }
         //formula.rangetosheet = Store.currentSheetIndex;
     },
-    getDropdownList: function(txt,searchText){
+    getDropdownList: function(txt,searchText,listUrlFunction){
         let list = [];
+        if(listUrlFunction){
+            if( typeof listUrlFunction === "function" && typeof listUrlFunction.nodeType !== "number"){
+                let flg = isAsyncFunction(listUrlFunction)
+                if(flg){
+                    listUrlFunction(searchText).then((list)=>{
+                        setTimeout(function() {
+                            let optionHtml = ''
+                            let firstFlg = true
+                            for(let obj of list){
+                                if(firstFlg){
+                                    optionHtml += `<div class="dropdown-List-item  luckysheet-mousedown-cancel checked">` + obj.value + `</div>`;
+                                    firstFlg = false
+                                }else{
+                                    optionHtml += `<div class="dropdown-List-item  luckysheet-mousedown-cancel">` + obj.value + `</div>`;
+                                }
+                            }
+                            $("#luckysheet-dataVerification-dropdown-List")
+                                .html(optionHtml);
+                        });
+                    })
+                }else{
+                    let list = listUrlFunction(searchText)
+                    setTimeout(function() {
+                        let optionHtml = ''
+                        let firstFlg = true
+                        for(let obj of list){
+                            if(firstFlg){
+                                optionHtml += `<div class="dropdown-List-item  luckysheet-mousedown-cancel checked">` + obj.value + `</div>`;
+                                firstFlg = false
+                            }else{
+                                optionHtml += `<div class="dropdown-List-item  luckysheet-mousedown-cancel">` + obj.value + `</div>`;
+                            }
+                        }
+                        $("#luckysheet-dataVerification-dropdown-List")
+                            .html(optionHtml);
+                    });
+                }
+            }else{
+                setTimeout(function() {
+                    let optionHtml = ''
+                    optionHtml += `<div class="dropdown-List-item  luckysheet-mousedown-cancel checked">测试1</div>`;
+                    optionHtml += `<div class="dropdown-List-item  luckysheet-mousedown-cancel">测试2</div>`;
+                    optionHtml += `<div class="dropdown-List-item  luckysheet-mousedown-cancel">测试3</div>`;
+                    optionHtml += `<div class="dropdown-List-item  luckysheet-mousedown-cancel">测试4</div>`;
+                    $("#luckysheet-dataVerification-dropdown-List")
+                        .html(optionHtml);
+                },1000);
+            }
+        }else{
+            if(formula.iscelldata(txt)){
+                let range = formula.getcellrange(txt);
+                let d = Store.luckysheetfile[getSheetIndex(range.sheetIndex)].data;
 
-        if(formula.iscelldata(txt)){
-            let range = formula.getcellrange(txt);
-            let d = Store.luckysheetfile[getSheetIndex(range.sheetIndex)].data;
+                for(let r = range.row[0]; r <= range.row[1]; r++){
+                    for(let c = range.column[0]; c <= range.column[1]; c++){
+                        if(d[r] == null){
+                            continue;
+                        }
 
-            for(let r = range.row[0]; r <= range.row[1]; r++){
-                for(let c = range.column[0]; c <= range.column[1]; c++){
-                    if(d[r] == null){
+                        let cell = d[r][c];
+
+                        if(cell == null || cell.v == null){
+                            continue;
+                        }
+
+                        let v = cell.m || cell.v;
+                        if(searchText){
+                            if(v.indexOf(searchText) === -1){
+                                continue;
+                            }
+                        }
+                        if(!list.includes(v)){
+                            list.push(v);
+                        }
+                    }
+                }
+            }
+            else{
+                let arr = txt.split(",");
+
+                for(let i = 0; i < arr.length; i++){
+                    let v = arr[i];
+
+                    if(v.length == 0){
                         continue;
                     }
-
-                    let cell = d[r][c];
-
-                    if(cell == null || cell.v == null){
-                        continue;
+                    if(searchText){
+                        if(v.indexOf(searchText) === -1){
+                            continue;
+                        }
                     }
-
-                    let v = cell.m || cell.v;
-
                     if(!list.includes(v)){
                         list.push(v);
                     }
                 }
             }
         }
-        else{
-            let arr = txt.split(",");
-
-            for(let i = 0; i < arr.length; i++){
-                let v = arr[i];
-
-                if(v.length == 0){
-                    continue;
-                }
-                if(searchText){
-                    if(v.indexOf(searchText) === -1){
-                        continue;
-                    }
-                }
-                if(!list.includes(v)){
-                    list.push(v);
-                }
-            }
-        }
-
         return list;
     },
     checkboxChange: function(r, c){
@@ -1735,6 +1848,18 @@ function validateIdCard(idCard) {
     } else {
         return false;
     }
+}
+function isAsyncFunction(func) {
+    let funcString = func.toString()
+    // 检查函数名称是否包含关键字 "async" 或 "promise"
+    const keywords = ['async', 'promise'];
+    for (let keyword of keywords) {
+        if (funcString.toLowerCase().indexOf(keyword) !== -1) {
+            return true;
+        }
+    }
+    // 默认情况下，认为非异步方法
+    return false;
 }
 
 export default dataVerificationCtrl;

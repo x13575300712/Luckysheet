@@ -51,8 +51,9 @@ window.sheetDataVerification = {
             "type2": null,
             "value1": "Develop,Fix,Done",
             "value2": "",
+            "value3": "111111",
             "checked": false,
-            "remote": false,
+            "remote": true,
             "prohibitInput": false,
             "hintShow": false,
             "hintText": ""

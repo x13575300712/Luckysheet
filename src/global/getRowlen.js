@@ -127,7 +127,7 @@ function computeRowlenByContent(d, r) {
             let textInfo = getCellTextInfo(cell, canvas,{
                 r:r,
                 c:c,
-                cellWidth:cellWidth
+                cellWidth:cellWidth,
             });
 
             let computeRowlen = 0;
@@ -135,7 +135,6 @@ function computeRowlenByContent(d, r) {
             if (textInfo != null) {
                 computeRowlen = textInfo.textHeightAll + 2;
             }
-
             //比较计算高度和当前高度取最大高度
             if (computeRowlen > currentRowLen) {
                 currentRowLen = computeRowlen;
@@ -151,7 +150,6 @@ function computeCellWidth(cell, col_index) {
     if (cell.mc && 1 !== cell.mc.cs) {
         colLocationArr = colSpanLocationByIndex(col_index, cell.mc.cs);
     }
-
     return colLocationArr[1] - colLocationArr[0] - 2;
 }
 
@@ -1553,7 +1551,7 @@ function getCellTextInfo(cell , ctx, option){
             //     textContent.textWidthAll = textW_all;
             //     textContent.textHeightAll = textH_all;
             // }
-
+            textContent.textHeightAll = textContent.textHeightAll + 20
         }
         else{
             let measureText = getMeasureText(value, ctx);

@@ -60,12 +60,15 @@ export function getCellValue(row, column, options = {}) {
     let curSheetOrder = getSheetIndex(Store.currentSheetIndex);
     let {
         type = 'v',
-        order = curSheetOrder
+        order = curSheetOrder,
+        objReturn = false
     } = { ...options };
     let targetSheetData = Store.luckysheetfile[order].data;
     let cellData = targetSheetData[row][column];
     let return_v;
-
+    if(objReturn){
+        return cellData
+    }
     if(getObjType(cellData) == "object"){
         return_v = cellData[type];
 
@@ -122,7 +125,8 @@ export function setCellValue(row, column, value, options = {}) {
         isRefresh = true,
         triggerBeforeUpdate = true,
         triggerUpdated = true,
-        success
+        success,
+        checkFlg = true,
     } = {...options}
 
     let file = Store.luckysheetfile[order];
@@ -132,7 +136,7 @@ export function setCellValue(row, column, value, options = {}) {
     }
 
     /* cell更新前触发  */
-    if (triggerBeforeUpdate && !method.createHookFunction("cellUpdateBefore", row, column, value, isRefresh)) {
+    if (triggerBeforeUpdate && !method.createHookFunction("cellUpdateBefore", row, column, value, isRefresh,checkFlg)) {
         /* 如果cellUpdateBefore函数返回false 则不执行后续的更新 */
         return;
     }
@@ -282,9 +286,17 @@ export function clearCell(row, column, options = {}) {
     let cell = targetSheetData[row][column];
 
     if(getObjType(cell) == "object"){
+        if(!method.createHookFunction(
+            "cellClearBefore",
+            row,column
+        )){
+            return
+        }
         delete cell["m"];
         delete cell["v"];
-
+        if(cell["selectObj"] != null){
+            delete cell["selectObj"];
+        }
         if(cell["f"] != null){
             delete cell["f"];
             formula.delFunctionGroup(row, column, order);
@@ -480,12 +492,32 @@ export function find(content, options = {}) {
 
             if (isWholeWord) {
                 if (isCaseSensitive) {
-                    if (content.toString() == cell[type]) {
-                        result.push(cell)
+                    if(cell.ct && "inlineStr" === cell.ct.t){
+                        let resultStr = ''
+                        for(let obj of cell.ct.s){
+                            resultStr = resultStr + obj.v
+                        }
+                        if (content.toString() === resultStr) {
+                            result.push(cell)
+                        }
+                    }else{
+                        if (content.toString() == cell[type]) {
+                            result.push(cell)
+                        }
                     }
                 } else {
-                    if (cell[type] && content.toString().toLowerCase() == cell[type].toLowerCase()) {
-                        result.push(cell)
+                    if(cell.ct && "inlineStr" === cell.ct.t){
+                        let resultStr = ''
+                        for(let obj of cell.ct.s){
+                            resultStr = resultStr + obj.v
+                        }
+                        if (content.toString().toLowerCase() === resultStr.toLowerCase()) {
+                            result.push(cell)
+                        }
+                    }else {
+                        if (cell[type] && content.toString().toLowerCase() == cell[type].toLowerCase()) {
+                            result.push(cell)
+                        }
                     }
                 }
             } else if (isRegularExpression) {
@@ -495,18 +527,48 @@ export function find(content, options = {}) {
                 } else {
                     reg = new RegExp(func_methods.getRegExpStr(content), 'ig')
                 }
-                if (reg.test(cell[type])) {
-                    result.push(cell)
+                if(cell.ct && "inlineStr" === cell.ct.t){
+                    let resultStr = ''
+                    for(let obj of cell.ct.s){
+                        resultStr = resultStr + obj.v
+                    }
+                    if (reg.test(resultStr)) {
+                        result.push(cell)
+                    }
+                }else {
+                    if (reg.test(cell[type])) {
+                        result.push(cell)
+                    }
                 }
             } else if (isCaseSensitive) {
                 let reg = new RegExp(func_methods.getRegExpStr(content), 'g');
-                if (reg.test(cell[type])) {
-                    result.push(cell);
+                if(cell.ct && "inlineStr" === cell.ct.t){
+                    let resultStr = ''
+                    for(let obj of cell.ct.s){
+                        resultStr = resultStr + obj.v
+                    }
+                    if (reg.test(resultStr)) {
+                        result.push(cell)
+                    }
+                }else {
+                    if (reg.test(cell[type])) {
+                        result.push(cell);
+                    }
                 }
             } else {
                 let reg = new RegExp(func_methods.getRegExpStr(content), 'ig');
-                if (reg.test(cell[type])) {
-                    result.push(cell);
+                if(cell.ct && "inlineStr" === cell.ct.t){
+                    let resultStr = ''
+                    for(let obj of cell.ct.s){
+                        resultStr = resultStr + obj.v
+                    }
+                    if (reg.test(resultStr)) {
+                        result.push(cell)
+                    }
+                }else {
+                    if (reg.test(cell[type])) {
+                        result.push(cell);
+                    }
                 }
             }
         }
@@ -2939,8 +3001,6 @@ export function setSingleRangeFormat(attr, value, options = {}) {
 
     for (let r = range.row[0]; r <= range.row[1]; r++) {
         for (let c = range.column[0]; c <= range.column[1]; c++) {
-            console.log('r',r);
-            console.log('c',c);
             setCellValue(r, c, {[attr]: value}, {
                 order: order,
                 isRefresh: false,
@@ -3223,7 +3283,7 @@ export function setRangeMerge(type, options = {}) {
                     for(let c = c1; c <= c2; c++){
                         let cell = data[r][c];
 
-                        if(cell != null && (!isRealNull(cell.v) || cell.f != null) && !isfirst){
+                        if(cell != null && (!isRealNull(cell.v) || cell.f != null || cell.ct != null) && !isfirst){
                             fv = $.extend(true, {}, cell);
                             isfirst = true;
                         }
@@ -3238,13 +3298,14 @@ export function setRangeMerge(type, options = {}) {
                 cfg["merge"][r1 + "_" + c1] = { "r": r1, "c": c1, "rs": r2 - r1 + 1, "cs": c2 - c1 + 1 };
             }
             else if(type == "vertical"){
+                debugger
                 for(let c = c1; c <= c2; c++){
                     let fv = {}, isfirst = false;
 
                     for(let r = r1; r <= r2; r++){
                         let cell = data[r][c];
 
-                        if(cell != null && (!isRealNull(cell.v) || cell.f != null) && !isfirst){
+                        if(cell != null && (!isRealNull(cell.v) || cell.f != null || cell.ct != null) && !isfirst){
                             fv = $.extend(true, {}, cell);
                             isfirst = true;
                         }
@@ -3265,7 +3326,7 @@ export function setRangeMerge(type, options = {}) {
                     for(let c = c1; c <= c2; c++){
                         let cell = data[r][c];
 
-                        if(cell != null && (!isRealNull(cell.v) || cell.f != null) && !isfirst){
+                        if(cell != null && (!isRealNull(cell.v) || cell.f != null || cell.ct != null) && !isfirst){
                             fv = $.extend(true, {}, cell);
                             isfirst = true;
                         }
@@ -4362,9 +4423,17 @@ export function clearRange(options = {}) {
                 let cell = d[r][c];
 
                 if(getObjType(cell) == "object"){
+                    if(!method.createHookFunction(
+                        "cellClearBefore",
+                        r,c
+                    )){
+                        return
+                    }
                     delete cell["m"];
                     delete cell["v"];
-
+                    if(cell["selectObj"] != null){
+                        delete cell["selectObj"];
+                    }
                     if(cell["f"] != null){
                         delete cell["f"];
                         formula.delFunctionGroup(r, c, file.index);
@@ -5631,6 +5700,7 @@ export function scroll(options = {}){
         targetColumn,
         success
     } = {...options}
+    let currentSheet = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)];
 
     if(scrollLeft != null){
         if(!isRealNum(scrollLeft)){
@@ -5646,7 +5716,9 @@ export function scroll(options = {}){
 
         let col = Store.visibledatacolumn[targetColumn],
             col_pre = targetColumn <= 0 ? 0 : Store.visibledatacolumn[targetColumn - 1];
-
+        if(currentSheet.freezen != null && currentSheet.freezen.vertical && isRealNum(currentSheet.freezen.vertical.left)){
+            col_pre  = col_pre - parseFloat(currentSheet.freezen.vertical.left)
+        }
         $("#luckysheet-scrollbar-x").scrollLeft(col_pre);
     }
 
@@ -5665,7 +5737,9 @@ export function scroll(options = {}){
 
         let row = Store.visibledatarow[targetRow],
             row_pre = targetRow <= 0 ? 0 : Store.visibledatarow[targetRow - 1];
-
+        if(currentSheet.freezen != null && currentSheet.freezen.horizontal && isRealNum(currentSheet.freezen.horizontal.top)){
+            row_pre  = row_pre - parseFloat(currentSheet.freezen.horizontal.top)
+        }
         $("#luckysheet-scrollbar-y").scrollTop(row_pre);
     }
 
@@ -5935,7 +6009,7 @@ export function getAllChartsBase64(cb) {
                 }})
 
                 chartMap[item.index][chartInfo.chart_id] = chartInstance
-                
+
             });
 
         }
@@ -5951,13 +6025,13 @@ export function getAllChartsBase64(cb) {
                         sheet[chart_id] = chartInstance.getDataURL();
                     }
                 }
-                
+
             }
         }
         cb && cb(chartMap)
-        
+
     }, 500);
-    
+
 }
 
 /**

@@ -27,6 +27,7 @@ import {
 } from "./protection";
 import Store from "../store";
 import luckysheetConfigsetting from "./luckysheetConfigsetting";
+import sheetmanage from "./sheetmanage";
 
 export function rowColumnOperationInitial() {
     //表格行标题 mouse事件
@@ -1357,8 +1358,8 @@ export function rowColumnOperationInitial() {
 
         let st_index = Store.luckysheet_select_save[0][Store.luckysheetRightHeadClickIs][0];
 
-		if(!method.createHookFunction("rowInsertBefore",  st_index, value, "lefttop", Store.luckysheetRightHeadClickIs)){ 
-			return; 
+		if(!method.createHookFunction("rowInsertBefore",  st_index, value, "lefttop", Store.luckysheetRightHeadClickIs)){
+			return;
 		}
 		luckysheetextendtable(Store.luckysheetRightHeadClickIs, st_index, value, "lefttop");
 
@@ -1375,8 +1376,8 @@ export function rowColumnOperationInitial() {
 
         let st_index = Store.luckysheet_select_save[0].row[0];
 
-		if(!method.createHookFunction("rowInsertBefore",  st_index, 1, "lefttop", Store.luckysheetRightHeadClickIs)){ 
-			return; 
+		if(!method.createHookFunction("rowInsertBefore",  st_index, 1, "lefttop", Store.luckysheetRightHeadClickIs)){
+			return;
 		}
         luckysheetextendtable('row', st_index, 1, "lefttop");
 
@@ -1584,7 +1585,7 @@ export function rowColumnOperationInitial() {
         let st_index = Store.luckysheet_select_save[0][Store.luckysheetRightHeadClickIs][1];
 
 		if(!method.createHookFunction("rowInsertBefore",  st_index, value, "rightbottom", Store.luckysheetRightHeadClickIs)){
-			return; 
+			return;
 		}
 
         luckysheetextendtable(Store.luckysheetRightHeadClickIs, st_index, value, "rightbottom");
@@ -1732,7 +1733,7 @@ export function rowColumnOperationInitial() {
             ed_index = Store.luckysheet_select_save[0][Store.luckysheetRightHeadClickIs][1];
 
         if(!method.createHookFunction("rowDeleteBefore", st_index, ed_index, Store.luckysheetRightHeadClickIs)){
-        	return; 
+        	return;
 
         }
         luckysheetdeletetable(Store.luckysheetRightHeadClickIs, st_index, ed_index);
@@ -1764,7 +1765,7 @@ export function rowColumnOperationInitial() {
             ed_index = Store.luckysheet_select_save[0].row[1];
 
 		if(!method.createHookFunction("rowDeleteBefore", st_index, ed_index, 'row')){
-			return; 
+			return;
 		}
         luckysheetdeletetable('row', st_index, ed_index);
     })
@@ -2287,8 +2288,17 @@ export function rowColumnOperationInitial() {
                         }
 
                         if (getObjType(d[r][c]) == "object") {
+                            if(!method.createHookFunction(
+                                "cellClearBefore",
+                                r,c
+                            )){
+                               continue
+                            }
                             delete d[r][c]["m"];
                             delete d[r][c]["v"];
+                            if(d[r][c]["selectObj"] != null){
+                                delete d[r][c]["selectObj"];
+                            }
 
                             if (d[r][c]["f"] != null) {
                                 delete d[r][c]["f"];

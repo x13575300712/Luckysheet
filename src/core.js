@@ -140,6 +140,12 @@ luckysheet.create = function (setting) {
 
     luckysheetConfigsetting.imageUpdateMethodConfig = extendsetting.imageUpdateMethodConfig;
 
+    //山蒲自定义配置
+    luckysheetConfigsetting.rowAdd = extendsetting.rowAdd
+    luckysheetConfigsetting.columnAdd = extendsetting.columnAdd
+    luckysheetConfigsetting.canMove = extendsetting.canMove
+    luckysheetConfigsetting.frozenDrop = extendsetting.frozenDrop
+
     if (Store.lang === "zh") flatpickr.localize(Mandarin.zh);
 
     // Store the currently used plugins for monitoring asynchronous loading
@@ -157,7 +163,7 @@ luckysheet.create = function (setting) {
         devicePixelRatio = 1;
     }
     Store.devicePixelRatio = Math.ceil(devicePixelRatio);
-
+    console.log('zllllllll',Store.devicePixelRatio)
     //loading
     const loadingObj = luckysheetlodingHTML("#" + container);
     Store.loadingObj = loadingObj;
@@ -237,6 +243,13 @@ luckysheet.sheetmanage = sheetmanage;
 // Data of the current table
 luckysheet.flowdata = function () {
     return Store.flowdata;
+};
+// Data of the current table
+luckysheet.pushReDoList = function (times) {
+    Store.jfredo.push({
+        "type": "loopIndex",
+        "loopTime":times
+    });
 };
 
 // Set selection highlight

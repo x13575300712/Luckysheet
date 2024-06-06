@@ -4,11 +4,11 @@ import conditionformat from './conditionformat';
 import server from './server';
 import {luckysheetupdateCell,setCenterInputPosition} from './updateCell';
 import { keycode } from './constant';
-import { 
-    luckysheetMoveHighlightCell, 
-    luckysheetMoveHighlightCell2, 
-    luckysheetMoveHighlightRange, 
-    luckysheetMoveHighlightRange2 
+import {
+    luckysheetMoveHighlightCell,
+    luckysheetMoveHighlightCell2,
+    luckysheetMoveHighlightRange,
+    luckysheetMoveHighlightRange2
 } from './sheetMove';
 import { selectHightlightShow, selectIsOverlap } from './select';
 import selection from './selection';
@@ -30,6 +30,7 @@ import tooltip from '../global/tooltip';
 import locale from '../locale/locale';
 import {enterKeyControll} from './inlineString';
 import Store from '../store';
+import {createFilter} from "./filter";
 
 
 let luckysheet_shiftkeydown = false;
@@ -275,7 +276,6 @@ export function keyboardInitial(){
         let altKey = event.altKey;
         let shiftKey = event.shiftKey;
         let kcode = event.keyCode;
-
         if ($("#luckysheet-modal-dialog-mask").is(":visible") || $(event.target).hasClass("luckysheet-mousedown-cancel") || $(event.target).hasClass("sp-input") || (parseInt($("#luckysheet-input-box").css("top")) > 0 && $(event.target).closest(".luckysheet-input-box").length > 0 && kcode != keycode.ENTER && kcode != keycode.TAB && kcode != keycode.UP && kcode != keycode.DOWN && kcode != keycode.LEFT && kcode != keycode.RIGHT)) {
             let anchor = $(window.getSelection().anchorNode);
             if(anchor.parent().is("#luckysheet-helpbox-cell") || anchor.is("#luckysheet-helpbox-cell")){
@@ -446,6 +446,12 @@ export function keyboardInitial(){
                         $("#luckysheet-rich-text-editor").html(value);
                         luckysheetRangeLast($("#luckysheet-rich-text-editor")[0]);
                         formula.functionInputHanddler($("#luckysheet-functionbox-cell"), $("#luckysheet-rich-text-editor"), kcode);
+                    }else if(kcode == 76){ //Ctrl + shift + B  筛选
+                        if ($("#luckysheet-filter-options-sheet" + Store.currentSheetIndex).length > 0) {
+                            $("#luckysheet-filter-initial").click();
+                        } else {
+                            createFilter();
+                        }
                     }
                 }
                 else if (kcode == 66) {//Ctrl + B  加粗
@@ -589,7 +595,6 @@ export function keyboardInitial(){
                     if (isEditMode() || Store.allowEdit === false){//此模式下禁用粘贴
                         return;
                     }
-
                     if($(event.target).hasClass("formulaInputFocus")){
                         return;
                     }
@@ -859,14 +864,13 @@ export function keyboardInitial(){
                 }
             }
         }
-
         luckysheetactiveCell();
 
         event.stopPropagation();
     });
-
     //单元格编辑 keydown (公式 上下左右键移动)
     $("#" + Store.container).add("#luckysheet-input-box").keydown(function (event) {
+
         if ($("#luckysheet-modal-dialog-mask").is(":visible") || $(event.target).hasClass("luckysheet-mousedown-cancel") || $(event.target).hasClass("formulaInputFocus")) {
             return;
         }
@@ -917,7 +921,8 @@ export function keyboardInitial(){
         }
         else if (!((kcode >= 112 && kcode <= 123) || kcode <= 46 || kcode == 144 || kcode == 108 || event.ctrlKey || event.altKey || (event.shiftKey && (kcode == 37 || kcode == 38 || kcode == 39 || kcode == 40 || kcode == keycode.WIN || kcode == keycode.WIN_R || kcode == keycode.MENU))) || kcode == 8 || kcode == 32 || kcode == 46 || (event.ctrlKey && kcode == 86)) {
             // if(event.target.id!="luckysheet-input-box" && event.target.id!="luckysheet-rich-text-editor"){
-                formula.functionInputHanddler($("#luckysheet-functionbox-cell"), $("#luckysheet-rich-text-editor"), kcode);
+
+            formula.functionInputHanddler($("#luckysheet-functionbox-cell"), $("#luckysheet-rich-text-editor"), kcode);
                 setCenterInputPosition(Store.luckysheetCellUpdate[0], Store.luckysheetCellUpdate[1], Store.flowdata);
             // }
 

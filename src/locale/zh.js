@@ -6436,6 +6436,7 @@ export default {
         MicrosoftYaHei: "Microsoft YaHei",
     },
     fontarray: [
+        "Segoe UI",
         "Times New Roman",
         "Arial",
         "Tahoma",

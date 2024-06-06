@@ -1387,7 +1387,7 @@ const luckysheetformula = {
         value = value || $input.text();
 
         // Hook function
-        if (!method.createHookFunction("cellUpdateBefore", r, c, value, isRefresh)) {
+        if (!method.createHookFunction("cellUpdateBefore", r, c, value, isRefresh,true)) {
             _this.cancelNormalSelected();
             return;
         }
@@ -1399,9 +1399,18 @@ const luckysheetformula = {
                     return;
                 }
             } else if (curv != null && curv.qp != 1) {
-                if (getObjType(curv) == "object" && (value == curv.f || value == curv.v || value == curv.m)) {
-                    _this.cancelNormalSelected();
-                    return;
+                if (getObjType(curv) == "object" && (value == curv.f || value == curv.v || value == curv.m || value / 100 === curv.v)) {
+                    if(curv.ct && curv.ct.fa && curv.ct.fa.indexOf('%+')>-1 ) {
+                        if(value / 100 === curv.v){
+                            _this.cancelNormalSelected();
+                            return;
+                        }
+                    }else{
+                        if(value === curv.v){
+                            _this.cancelNormalSelected();
+                            return;
+                        }
+                    }
                 } else if (value == curv) {
                     _this.cancelNormalSelected();
                     return;
@@ -1685,10 +1694,15 @@ const luckysheetformula = {
                 //         currentRowLen = computeRowlen;
                 //     }
                 // }
-
-                if (currentRowLen > defaultrowlen) {
-                    cfg["rowlen"][r] = currentRowLen;
-                    RowlChange = true;
+                if(cfg["rowlen"][r] === 'auto'){
+                    if(Store.autoRowHeight[r] < currentRowLen){
+                        RowlChange = true;
+                    }
+                }else{
+                    if (currentRowLen > defaultrowlen) {
+                        cfg["rowlen"][r] = currentRowLen;
+                        RowlChange = true;
+                    }
                 }
             }
         }
@@ -5277,6 +5291,12 @@ const luckysheetformula = {
             //此处setcellvalue 中this.execFunctionGroupData会保存想要更新的值，本函数结尾不要设为null,以备后续函数使用
             // setcellvalue(origin_r, origin_c, _this.execFunctionGroupData, value);
             let cellCache = [[{ v: null }]];
+            if(data[origin_r][origin_c] && data[origin_r][origin_c].ct){
+                let ct = data[origin_r][origin_c].ct
+                if(ct.fa && ct.fa.indexOf('%+') > -1){
+                    value = value + '%'
+                }
+            }
             setcellvalue(0, 0, cellCache, value);
             _this.execFunctionGlobalData[origin_r + "_" + origin_c + "_" + index] = cellCache[0][0];
         }
@@ -6148,7 +6168,7 @@ const luckysheetformula = {
             }
         }
 
-        
+
     },
     addButtonListener:function(txt, r, c){
         let listener =  $("#luckysheet-formula-refresh").data("listener")
@@ -6162,7 +6182,7 @@ const luckysheetformula = {
                 e.stopPropagation();
             })
         }
-        
+
     },
     showButton: function(r, c) {
 
@@ -6177,7 +6197,7 @@ const luckysheetformula = {
         if(!!margeset){
             row = margeset.row[1];
             row_pre = margeset.row[0];
-            
+
             col = margeset.column[1];
             col_pre = margeset.column[0];
         }

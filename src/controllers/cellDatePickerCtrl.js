@@ -83,7 +83,16 @@ const cellDatePickerCtrl = {
             dateFormat,
             time_24hr,
             defaultDate,
-            onClose() {
+            onClose(dateObj, dateStr) {
+                if(dateObj && dateObj[0]){
+                    let currentVal = datenum_local(dateObj[0])
+                    $("#luckysheet-rich-text-editor").html(dateStr);
+                    setCellValue(r, c, currentVal, { isRefresh: false })
+                    setCellFormat(r, c, 'ct', cell.ct)
+                    if (!enableTime) {
+                        formula.updatecell(Store.luckysheetCellUpdate[0], Store.luckysheetCellUpdate[1]);
+                    }
+                }
                 setTimeout(() => {
                     fp.destroy()
                 }, 0);
