@@ -3,6 +3,7 @@ import formula from "./formula";
 import { jfrefreshgrid_adRC, jfrefreshgrid_deleteCell, jfrefreshgrid_rhcw } from "./refresh";
 import { datagridgrowth, getcellFormula } from "./getdata";
 import { setcellvalue } from "./setdata";
+import imageCtrl from "../controllers/imageCtrl";
 import conditionformat from "../controllers/conditionformat";
 import luckysheetFreezen from "../controllers/freezen";
 import { selectHightlightShow } from "../controllers/select";
@@ -531,7 +532,45 @@ function luckysheetextendtable(type, index, value, direction, sheetIndex) {
             }
         }
     }
-
+    //图片配置变动
+    if(imageCtrl.imagesCell){
+        let newImagesCell = {}
+        for(let key in imageCtrl.imagesCell){
+            let r = Number(key.split("_")[0]),
+                c = Number(key.split("_")[1]);
+            let id = imageCtrl.imagesCell[key];
+            if (type == "row") {
+                if (index < r) {
+                    newImagesCell[r + value + "_" + c] = id;
+                    imageCtrl.images[id].rowIndex = r + value
+                } else if (index == r) {
+                    if (direction == "lefttop") {
+                        newImagesCell[r + value + "_" + c] = id;
+                        imageCtrl.images[id].rowIndex = r + value
+                    } else {
+                        newImagesCell[r + "_" + c] = id;
+                    }
+                } else {
+                    newImagesCell[r + "_" + c] = id;
+                }
+            } else if (type == "column") {
+                if (index < c) {
+                    newImagesCell[r + "_" + (c + value)] = id;
+                    imageCtrl.images[id].colIndex = c + value
+                } else if (index == c) {
+                    if (direction == "lefttop") {
+                        newImagesCell[r + "_" + (c + value)] = id;
+                        imageCtrl.images[id].colIndex = c + value
+                    } else {
+                        newImagesCell[r + "_" + c] = id;
+                    }
+                } else {
+                    newImagesCell[r + "_" + c] = id;
+                }
+            }
+        }
+        imageCtrl.imagesCell = newImagesCell
+    }
     let type1;
     if (type == "row") {
         type1 = "r";

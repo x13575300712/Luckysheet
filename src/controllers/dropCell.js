@@ -432,7 +432,6 @@ const luckysheetDropCell = {
     },
     update: function(){
         let _this = this;
-
         if(!checkProtectionLockedRangeList([_this.applyRange], Store.currentSheetIndex)){
             return;
         }
@@ -486,7 +485,6 @@ const luckysheetDropCell = {
                 let copyD = copyData[i - apply_str_c];
 
                 let applyData = _this.getApplyData(copyD, csLen, asLen);
-
                 if(direction == "down"){
                     for(let j = apply_str_r; j <= apply_end_r; j++){
                         let cell = applyData[j - apply_str_r];
@@ -539,9 +537,11 @@ const luckysheetDropCell = {
                                 }
                             }
                         }
-
+                        let orgData = d[j][i]
                         d[j][i] = cell;
-
+                        if(orgData.mc){
+                            d[j][i].mc = orgData.mc
+                        }
                         //边框
                         let bd_r = copy_str_r + (j - apply_str_r) % csLen;
                         let bd_c = i;

@@ -44,6 +44,7 @@ const luckysheetConfigsetting = {
     columnAdd:true, //复制能否增加列
     frozenDrop:true, //能否通过拖动来改变固定行列
     canMove:true, //是否能够通过拖动来改变单元格的值
+    customToolButton:[]//自定义按钮
 }
 
 export default luckysheetConfigsetting;

@@ -1705,8 +1705,16 @@ export default function luckysheetHandler() {
                     row_index = row_focus;
                     col_index = column_focus;
                 }
-                luckysheetupdateCell(row_index, col_index, Store.flowdata);
-
+                //查看是否为图片单元格
+                if(imageCtrl.imagesCell!=null && imageCtrl.imagesCell[row_index+"_"+col_index]
+                    && imageCtrl.images !== null &&
+                    imageCtrl.images[imageCtrl.imagesCell[row_index+"_"+col_index]] !== null &&
+                    imageCtrl.images[imageCtrl.imagesCell[row_index+"_"+col_index]]?.type === '4'){
+                    imageCtrl.showPicFullScreen(imageCtrl.imagesCell[row_index+"_"+col_index])
+                    return;
+                }else{
+                    luckysheetupdateCell(row_index, col_index, Store.flowdata);
+                }
                 /* 设置选区高亮 */
                 selectHightlightShow();
             }
@@ -4837,18 +4845,68 @@ export default function luckysheetHandler() {
 
             if (Store.config["merge"] != null) {
                 let hasMc = false;
-
-                for (let r = last["row"][0]; r <= last["row"][1]; r++) {
-                    for (let c = last["column"][0]; c <= last["column"][1]; c++) {
-                        let cell = Store.flowdata[r][c];
-
-                        if (cell != null && cell.mc != null) {
-                            hasMc = true;
-                            break;
+                //检查合并单元格是否一致
+                switch(luckysheetDropCell.direction){
+                    case 'up':
+                    case 'down':
+                        for (let r = last["row"][0]; r <= last["row"][1] - 1; r++) {
+                            for (let c = last["column"][0]; c <= last["column"][1]; c++) {
+                                let cell = Store.flowdata[r][c];
+                                let cellAfter = Store.flowdata[r + 1][c];
+                                if (cell != null && cell.mc != null) {
+                                    if(cellAfter != null && cellAfter.mc != null){
+                                        if(cellAfter.mc.c === cell.mc.c && ((cell.mc.cs && cell.mc.cs === cellAfter.mc.cs) || !cell.mc.cs)){
+                                           continue
+                                        }
+                                    }
+                                    hasMc = true;
+                                    break;
+                                }else{
+                                    if(cellAfter != null && cellAfter.mc != null){
+                                        hasMc = true;
+                                        break;
+                                    }
+                                }
+                            }
                         }
-                    }
+                        break
+                    case 'left':
+                    case 'right':
+                        for (let c = last["column"][0]; c <= last["column"][1] - 1; c++) {
+                        for (let r = last["row"][0]; r <= last["row"][1]; r++) {
+                                let cell = Store.flowdata[r][c];
+                                let cellAfter = Store.flowdata[r][c + 1];
+                                if (cell != null && cell.mc != null) {
+                                    if(cellAfter != null && cellAfter.mc != null){
+                                        if(cellAfter.mc.r === cell.mc.r && ((cell.mc.rs && cell.mc.rs === cellAfter.mc.cs) || !cell.mc.rs)){
+                                            continue
+                                        }
+                                    }
+                                    hasMc = true;
+                                    break;
+                                }else{
+                                    if(cellAfter != null && cellAfter.mc != null){
+                                        hasMc = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        break
+                    default:
+                        tooltip.info(locale_drag.noMerge, "");
+                        return;
                 }
-
+                // for (let r = last["row"][0]; r <= last["row"][1]; r++) {
+                //     for (let c = last["column"][0]; c <= last["column"][1]; c++) {
+                //         let cell = Store.flowdata[r][c];
+                //
+                //         if (cell != null && cell.mc != null) {
+                //             hasMc = true;
+                //             break;
+                //         }
+                //     }
+                // }
                 if (hasMc) {
                     if (isEditMode()) {
                         alert(locale_drag.noMerge);
@@ -4859,16 +4917,68 @@ export default function luckysheetHandler() {
                     return;
                 }
 
-                for (let r = row_s; r <= row_e; r++) {
-                    for (let c = col_s; c <= col_e; c++) {
-                        let cell = Store.flowdata[r][c];
-
-                        if (cell != null && cell.mc != null) {
-                            hasMc = true;
-                            break;
+                //检查合并单元格是否一致
+                switch(luckysheetDropCell.direction){
+                    case 'up':
+                    case 'down':
+                        for (let r = row_s; r <= row_e - 1; r++) {
+                            for (let c = col_s; c <= col_e; c++) {
+                                let cell = Store.flowdata[r][c];
+                                let cellAfter = Store.flowdata[r + 1][c];
+                                if (cell != null && cell.mc != null) {
+                                    if(cellAfter != null && cellAfter.mc != null){
+                                        if(cellAfter.mc.c === cell.mc.c && ((cell.mc.cs && cell.mc.cs === cellAfter.mc.cs) || !cell.mc.cs)){
+                                            continue
+                                        }
+                                    }
+                                    hasMc = true;
+                                    break;
+                                }else{
+                                    if(cellAfter != null && cellAfter.mc != null){
+                                        hasMc = true;
+                                        break;
+                                    }
+                                }
+                            }
                         }
-                    }
+                        break
+                    case 'left':
+                    case 'right':
+                        for (let c = col_s; c <= col_e - 1; c++) {
+                            for (let r = row_s; r <= row_e; r++) {
+                                let cell = Store.flowdata[r][c];
+                                let cellAfter = Store.flowdata[r][c + 1];
+                                if (cell != null && cell.mc != null) {
+                                    if(cellAfter != null && cellAfter.mc != null){
+                                        if(cellAfter.mc.r === cell.mc.r && ((cell.mc.rs && cell.mc.rs === cellAfter.mc.cs) || !cell.mc.rs)){
+                                            continue
+                                        }
+                                    }
+                                    hasMc = true;
+                                    break;
+                                }else{
+                                    if(cellAfter != null && cellAfter.mc != null){
+                                        hasMc = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        break
+                    default:
+                        tooltip.info(locale_drag.noMerge, "");
+                        return;
                 }
+                // for (let r = row_s; r <= row_e; r++) {
+                //     for (let c = col_s; c <= col_e; c++) {
+                //         let cell = Store.flowdata[r][c];
+                //
+                //         if (cell != null && cell.mc != null) {
+                //             hasMc = true;
+                //             break;
+                //         }
+                //     }
+                // }
 
                 if (hasMc) {
                     if (isEditMode()) {
@@ -6112,19 +6222,53 @@ export default function luckysheetHandler() {
                                     cell.v = null;
                                     cell.m = "";
                                 } else {
-                                    let mask = genarate($td.text());
+                                    const charToRemove = '\n';
+                                    const resultText = removeSpacesAfterChar($td.text(),charToRemove);
+                                    let mask = genarate(resultText);
                                     cell.v = mask[2];
                                     cell.ct = mask[1];
                                     cell.m = mask[0];
+                                    if(cell.v.indexOf && cell.v.indexOf(charToRemove)>-1){
+                                        let map = {}
+                                        let flg = false
+                                        $td.find('font').each(function() {
+                                            let text = removeSpacesAfterChar($.trim($(this).text()),charToRemove);
+                                            let splitChars = text.split(charToRemove)
+                                            for(let sc of splitChars){
+                                                map[sc] = $(this).css("color")
+                                            }
+                                            flg = true
+                                        });
+                                        delete cell.v
+                                        delete cell.m
+                                        cell.ct.t = 'inlineStr'
+                                        if(flg){
+                                            cell.ct.s = []
+                                            let splitChars = mask[2].split(charToRemove)
+                                            let content = ''
+                                            for(let sc of splitChars){
+                                                if(map[sc]){
+                                                    cell.ct.s.push({v:content})
+                                                    cell.ct.s.push({v:charToRemove + sc,fc:map[sc]})
+                                                    content = ''
+                                                }else{
+                                                    content = content + charToRemove + sc
+                                                }
+                                            }
+                                            if(content !== ''){
+                                                cell.ct.s.push({v:content})
+                                            }
+                                            cell.ct.s[0].v = cell.ct.s[0].v.substring(2)
+                                        }else{
+                                            cell.ct.s = [{v:mask[2]}]
+                                        }
+                                    }
                                 }
-
                                 let bg = $td.css("background-color");
                                 if (bg == "rgba(0, 0, 0, 0)") {
                                     bg = null;
                                 }
-
                                 cell.bg = bg;
-
                                 let bl = $td.css("font-weight");
                                 if (bl == 400 || bl == "normal") {
                                     cell.bl = 0;
@@ -6165,9 +6309,9 @@ export default function luckysheetHandler() {
 
                                 // 水平对齐属性
                                 let ht = $td.css("text-align");
-                                if (ht == "center") {
+                                if (ht === "center") {
                                     cell.ht = 0;
-                                } else if (ht == "right") {
+                                } else if (ht === "right" || ht === "-webkit-right") {
                                     cell.ht = 2;
                                 } else {
                                     cell.ht = 1;
@@ -6324,9 +6468,17 @@ export default function luckysheetHandler() {
 
                             r++;
                         });
-
+                    let colArray = []
+                    if(luckysheetConfigsetting.rowAdd){
+                        $("#luckysheet-copy-content")
+                            .find("table col")
+                            .each(function() {
+                                let $col = $(this);
+                                colArray.push($col.css("width"))
+                            })
+                    }
                     Store.luckysheet_selection_range = [];
-                    selection.pasteHandler(data, borderInfo);
+                    selection.pasteHandler(data, borderInfo,colArray);
                     $("#luckysheet-copy-content").empty();
                 }
 
@@ -6439,4 +6591,8 @@ function hideUsername() {
             $$(".username", ele).style.display = "none";
         }
     });
+}
+function removeSpacesAfterChar(str, charToRemove) {
+    const regex = new RegExp(charToRemove + '\\s+', 'g');
+    return str.replace(regex, charToRemove);
 }

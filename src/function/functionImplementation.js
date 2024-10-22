@@ -41,7 +41,9 @@ const functionImplementation = {
             for(let i = 0;i < arguments[1];i++ ){
                 if(arguments[i+2]){
                     if(getObjType(arguments[i+2]) === "object" ){
-                        if(arguments[i+2].data.v){
+                        if(arguments[i+2].data.selectObj){
+                            data['value'+(i+1)] = arguments[i+2].data.selectObj.value
+                        }else if(arguments[i+2].data.v){
                             data['value'+(i+1)] = arguments[i+2].data.v
                         }else{
                             return ""
@@ -64,21 +66,9 @@ const functionImplementation = {
             return d[cell_r][cell_c].v
         }
         let userInfoObject = {}
-        if(!userInfo){
-            userInfoObject = {userInfo:{
-                token:'4ac8b6a3-4c79-46d1-94d7-7d13d2fa5156'
-            }}
-        }else{
+        if(userInfo){
             userInfoObject = JSON.parse(userInfo)
         }
-        //参数类型错误检测
-        // for (var i = 0; i < arguments.length; i++) {
-        //     var p = formula.errorParamCheck(this.p, arguments[i], i);
-        //
-        //     if (!p[0]) {
-        //         return formula.error.v;
-        //     }
-        // }
         try {
             var url = arguments[0]
             let index = url.lastIndexOf("/");
@@ -91,7 +81,10 @@ const functionImplementation = {
                 contentType: "application/json",
                 timeout : 10000,
                 beforeSend:function (request) {
-                    const token = 'Bearer ' + userInfoObject.userInfo.token
+                    let token = 'Bearer ' + userInfoObject.userInfo.token
+                    if(luckysheetConfigsetting.token){
+                        token = 'Bearer ' + luckysheetConfigsetting.token
+                    }
                     request.setRequestHeader("Content-Type","application/json");
                     request.setRequestHeader("Authorization",token);
                 },
@@ -107,6 +100,7 @@ const functionImplementation = {
                     formula.groupValuesRefresh();
                     formula.execFunctionGroup(cell_r, cell_c, data.rows);
                     let ct = d[cell_r][cell_c].ct
+                    let mc = d[cell_r][cell_c].mc
                     d[cell_r][cell_c] = {
                         "v": data.rows,
                         "f": cell_fp,
@@ -114,6 +108,9 @@ const functionImplementation = {
                         "ct": ct,
                         "bg": d[cell_r][cell_c].bg
                     };
+                    if(mc){
+                        d[cell_r][cell_c].mc = mc
+                    }
                     jfrefreshgrid(d, [{"row": [cell_r, cell_r], "column": [cell_c, cell_c]}]);
                     if(luckyInitFlg === 'true'){
                         sheetmanage.changeSheetExec(0);

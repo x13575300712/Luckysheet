@@ -6422,6 +6422,7 @@ export default {
         moveCell1   : '移動並調整儲存格大小',
         moveCell2   : '移動並且不調整儲存格的大小',
         moveCell3   : '不要移動儲存格並調整其大小',
+        moveCell4   : '單元格内圖片',
         fixedPos    : '固定位置',
         border      : '邊框',
         width       : '寬度',

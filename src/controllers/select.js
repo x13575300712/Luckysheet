@@ -192,10 +192,9 @@ function selectHightlightShow(isRestore = false) {
 
         if(Store.luckysheet_select_save_previous == null |Store.luckysheet_select_save_previous !== luckysheet_select_save_previous){
             method.createHookFunction('rangeSelect', Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)], Store.luckysheet_select_save);
+
         }
-
         Store.luckysheet_select_save_previous = luckysheet_select_save_previous;
-
     method.createHookFunction('afterCellSelect',Store.luckysheet_select_save)
 }
 

@@ -145,6 +145,8 @@ luckysheet.create = function (setting) {
     luckysheetConfigsetting.columnAdd = extendsetting.columnAdd
     luckysheetConfigsetting.canMove = extendsetting.canMove
     luckysheetConfigsetting.frozenDrop = extendsetting.frozenDrop
+    luckysheetConfigsetting.token = extendsetting.token
+    luckysheetConfigsetting.customToolButton = extendsetting.customToolButton
 
     if (Store.lang === "zh") flatpickr.localize(Mandarin.zh);
 
@@ -251,7 +253,15 @@ luckysheet.pushReDoList = function (times) {
         "loopTime":times
     });
 };
-
+luckysheet.jfredoList = function () {
+    return Store.jfredo;
+};
+luckysheet.pushReDoEnd = function (messageType) {
+    Store.jfredo.push({
+        "type": "endFlg",
+        "messageType":messageType
+    });
+};
 // Set selection highlight
 luckysheet.selectHightlightShow = selectHightlightShow;
 

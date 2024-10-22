@@ -3298,7 +3298,6 @@ export function setRangeMerge(type, options = {}) {
                 cfg["merge"][r1 + "_" + c1] = { "r": r1, "c": c1, "rs": r2 - r1 + 1, "cs": c2 - c1 + 1 };
             }
             else if(type == "vertical"){
-                debugger
                 for(let c = c1; c <= c2; c++){
                     let fv = {}, isfirst = false;
 
@@ -3310,7 +3309,7 @@ export function setRangeMerge(type, options = {}) {
                             isfirst = true;
                         }
 
-                        data[r][c] = { "mc": { "r": r1, "c": c } };
+                        data[r][c] = { "mc": { "r": r1, "c": c },"selectObj":cell?.selectObj };
                     }
 
                     data[r1][c] = fv;
@@ -4425,7 +4424,7 @@ export function clearRange(options = {}) {
                 if(getObjType(cell) == "object"){
                     if(!method.createHookFunction(
                         "cellClearBefore",
-                        r,c
+                        r,c,d
                     )){
                         return
                     }
@@ -6469,7 +6468,8 @@ export function insertImage(src, options = {}){
         order = getSheetIndex(Store.currentSheetIndex),
         rowIndex,
         colIndex,
-        success
+        success,
+        id
     } = {...options}
 
     let file = Store.luckysheetfile[order];
@@ -6518,7 +6518,10 @@ export function insertImage(src, options = {}){
                 left: left,
                 top: top,
                 originWidth: width,
-                originHeight: height
+                originHeight: height,
+                colIndex,
+                rowIndex,
+                id
             }
 
             imageCtrl.addImgItem(img);

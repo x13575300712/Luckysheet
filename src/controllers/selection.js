@@ -649,7 +649,7 @@ const selection = {
             }
         }, 10);
     },
-    pasteHandler: function(data, borderInfo) {
+    pasteHandler: function(data, borderInfo,colArray) {
         if (!checkProtectionLockedRangeList(Store.luckysheet_select_save, Store.currentSheetIndex)) {
             return;
         }
@@ -684,6 +684,9 @@ const selection = {
             if (JSON.stringify(borderInfo).length > 2 && cfg["borderInfo"] == null) {
                 cfg["borderInfo"] = [];
             }
+            if(cfg.columnlen === null){
+                cfg.columnlen = {}
+            }
 
             let copyh = data.length,
                 copyc = data[0].length;
@@ -710,7 +713,11 @@ const selection = {
 
                 return;
             }
-
+            if(colArray){
+                for(let i = 0;i<colArray.length;i++){
+                    cfg.columnlen[i + minc] = parseInt(colArray[i].substring(0,colArray[i].length - 2))
+                }
+            }
             let d = editor.deepCopyFlowData(Store.flowdata); //取数据
             let rowMaxLength = d.length;
             let cellMaxLength = d[0].length;
@@ -829,7 +836,7 @@ const selection = {
             )){
                 return
             }
-            if (addr > 0 || addc > 0 || RowlChange) {
+            if (addr > 0 || addc > 0 || RowlChange || colArray) {
                 let allParam = {
                     cfg: cfg,
                     RowlChange: true,

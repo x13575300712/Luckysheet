@@ -1398,16 +1398,39 @@ export function rowColumnOperationInitial() {
 
     // custom right-click a cell buttton click
     $(".luckysheetColsRowsHandleAdd_custom").click(function(clickEvent) {
+        if (clickEvent.target.nodeName === "INPUT") {
+            return;
+        }
         $("#luckysheet-rightclick-menu").hide();
         const cellRightClickConfig = luckysheetConfigsetting.cellRightClickConfig;
         const rowIndex = Store.luckysheet_select_save[0].row[0];
         const columnIndex = Store.luckysheet_select_save[0].column[0];
         if (cellRightClickConfig.customs[Number(clickEvent.currentTarget.dataset.index)]) {
             try {
+                let $t = $(this),
+                    valueInput = $t.find("input"),
+                    inputVal = ''
+                if(valueInput){
+                    inputVal = valueInput.val()
+                }
                 cellRightClickConfig.customs[Number(clickEvent.currentTarget.dataset.index)].onClick(
                     clickEvent,
                     event,
-                    { rowIndex, columnIndex },
+                    { rowIndex, columnIndex,inputVal },
+                );
+            } catch (e) {
+                console.error("custom click error", e);
+            }
+        }
+    });
+    // custom right-click a cell buttton click
+    $(".luckysheetToolbarHandleAdd_custom").click(function(clickEvent) {
+        const customToolButton = luckysheetConfigsetting.customToolButton;
+        if (customToolButton[Number(clickEvent.currentTarget.dataset.index)]) {
+            try {
+                customToolButton[Number(clickEvent.currentTarget.dataset.index)].onClick(
+                    clickEvent,
+                    event,
                 );
             } catch (e) {
                 console.error("custom click error", e);
@@ -1734,9 +1757,10 @@ export function rowColumnOperationInitial() {
 
         if(!method.createHookFunction("rowDeleteBefore", st_index, ed_index, Store.luckysheetRightHeadClickIs)){
         	return;
-
         }
         luckysheetdeletetable(Store.luckysheetRightHeadClickIs, st_index, ed_index);
+
+        method.createHookFunction("rowDeleteAfter", st_index, ed_index, Store.luckysheetRightHeadClickIs)
     });
     $("#luckysheet-delRows").click(function(event) {
         $("#luckysheet-rightclick-menu").hide();
@@ -1768,6 +1792,8 @@ export function rowColumnOperationInitial() {
 			return;
 		}
         luckysheetdeletetable('row', st_index, ed_index);
+
+        method.createHookFunction("rowDeleteAfter", st_index, ed_index, 'row')
     })
     $("#luckysheet-delCols").click(function (event) {
 
@@ -2290,7 +2316,7 @@ export function rowColumnOperationInitial() {
                         if (getObjType(d[r][c]) == "object") {
                             if(!method.createHookFunction(
                                 "cellClearBefore",
-                                r,c
+                                r,c,d
                             )){
                                continue
                             }
@@ -2317,6 +2343,10 @@ export function rowColumnOperationInitial() {
                         if (hyperlink?.[`${r}_${c}`]) {
                             delete hyperlink[`${r}_${c}`];
                             hyperlinkUpdated = true;
+                        }
+                        // 同步清除单元格图片
+                        if(imageCtrl.imagesCell?.[`${r}_${c}`]){
+                            imageCtrl.removeImgItemById(imageCtrl.imagesCell?.[`${r}_${c}`])
                         }
                     }
                 }

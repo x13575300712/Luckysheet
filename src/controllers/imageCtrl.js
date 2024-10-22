@@ -10,10 +10,11 @@ import Store from '../store';
 import locale from '../locale/locale';
 import tooltip from '../global/tooltip';
 import method from '../global/method';
+import {luckysheetrefreshgrid} from "../global/refresh";
 
 const imageCtrl = {
     imgItem: {
-        type: '3',  //1移动并调整单元格大小 2移动并且不调整单元格的大小 3不要移动单元格并调整其大小
+        type: '4',  //1移动并调整单元格大小 2移动并且不调整单元格的大小 3不要移动单元格并调整其大小 4单元格内图片
         src: '',  //图片url
         originWidth: null,  //图片原始宽度
         originHeight: null,  //图片原始高度
@@ -37,9 +38,13 @@ const imageCtrl = {
             radius: 0,  //边框半径
             style: 'solid',  //边框类型
             color: '#000',  //边框颜色
-        }
+        },
+        rowIndex: 0,
+        colIndex: 0,
+        drawFlg: 0,
     },
     images: null,
+    imagesCell: null,
     currentImgId: null,
     currentWinW: null,
     currentWinH: null,
@@ -52,11 +57,27 @@ const imageCtrl = {
     cropChangeObj: null,
     copyImgItemObj: null,
     insertImg: function (file) {
+        let _this = this;
+        let last = Store.luckysheet_select_save[Store.luckysheet_select_save.length - 1];
+        let rowIndex = last.row_focus || 0;
+        let colIndex = last.column_focus || 0;
+        if(!method.createHookFunction('insertImgBefore', rowIndex,colIndex,_this.imgItem.type)){
+            $("#luckysheet-imgUpload").val("");
+            return;
+        }
         const uploadImage = Store.toJsonOptions && Store.toJsonOptions['uploadImage'];
         if (typeof uploadImage === 'function') {
             // 上传形式
-            uploadImage(file).then(url => {
-                imageCtrl._insertImg(url);
+            uploadImage({file,rowIndex,colIndex}).then(id => {
+                if(id){
+                    let render = new FileReader();
+                    render.readAsDataURL(file);
+                    render.onload = function(event){
+                        let src = event.target.result;
+                        imageCtrl._insertImg(src,id);
+                        $("#luckysheet-imgUpload").val("");
+                    }
+                }
             }).catch(error => {
                 tooltip.info('<i class="fa fa-exclamation-triangle"></i>', '图片上传失败');
             });
@@ -73,7 +94,7 @@ const imageCtrl = {
         }
     },
 
-    _insertImg: function(src){
+    _insertImg: function(src,id){
         let _this = this;
 
         let last = Store.luckysheet_select_save[Store.luckysheet_select_save.length - 1];
@@ -86,15 +107,16 @@ const imageCtrl = {
         image.onload = function(){
             let width = image.width,
                 height = image.height;
-
             let img = {
                 src: src,
                 left: left,
                 top: top,
                 originWidth: width,
-                originHeight: height
+                originHeight: height,
+                rowIndex:rowIndex,
+                colIndex:colIndex,
+                id:id
             }
-
             _this.addImgItem(img);
         }
         let imageUrlHandle = Store.toJsonOptions && Store.toJsonOptions['imageUrlHandle'];
@@ -132,7 +154,11 @@ const imageCtrl = {
 
         let borderWidth = imgItem.border.width;
 
-        return  `<div id="${id}" class="luckysheet-modal-dialog luckysheet-modal-dialog-image" style="width:${width}px;height:${height}px;padding:0;position:${position};left:${left}px;top:${top}px;z-index:200;">
+        let dispalyParam = 'block'
+        if(imgItemParam.type === '4' || imgItem.type === '4'){
+            dispalyParam = 'none'
+        }
+        return  `<div id="${id}" class="luckysheet-modal-dialog luckysheet-modal-dialog-image" style="width:${width}px;height:${height}px;padding:0;position:${position};left:${left}px;top:${top}px;z-index:200;display: ${dispalyParam}">
                     <div class="luckysheet-modal-dialog-content" style="width:100%;height:100%;overflow:hidden;position:relative;">
                         <img src="${src}" style="position:absolute;width:${imgItem.default.width * Store.zoomRatio}px;height:${imgItem.default.height * Store.zoomRatio}px;left:${-imgItem.crop.offsetLeft * Store.zoomRatio}px;top:${-imgItem.crop.offsetTop * Store.zoomRatio}px;" />
                     </div>
@@ -164,6 +190,10 @@ const imageCtrl = {
                                 <div class="radio-item">
                                     <input type="radio" id="imgItemType3" name="imgItemType" value="3">
                                     <label for="imgItemType3">${imageText.moveCell3}</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="imgItemType4" name="imgItemType" value="4">
+                                    <label for="imgItemType4">${imageText.moveCell4}</label>
                                 </div>
                             </div>
                             <div class="slider-box-checkbox">
@@ -311,7 +341,6 @@ const imageCtrl = {
     },
     init: function() {
         let _this = this;
-
         //关闭
         $("#luckysheet-modal-dialog-slider-imageCtrl .luckysheet-model-close-btn").click(function () {
             $("#luckysheet-modal-dialog-slider-imageCtrl").hide();
@@ -360,10 +389,8 @@ const imageCtrl = {
 
             _this.configChange("border-color", currenColor);
         });
-
         //image active
         $("#luckysheet-image-showBoxs").off("mousedown.active").on("mousedown.active", ".luckysheet-modal-dialog-image", function(e) {
-
 
             if(!checkProtectionAuthorityNormal(Store.currentSheetIndex, "editObjects",false)){
                 return;
@@ -412,7 +439,6 @@ const imageCtrl = {
                 "top": -item.border.width * Store.zoomRatio,
                 "bottom": -item.border.width * Store.zoomRatio,
             })
-
             _this.sliderHtmlShow();
 
             e.stopPropagation();
@@ -525,6 +551,7 @@ const imageCtrl = {
             _this.removeImgItem();
             e.stopPropagation();
         })
+        imageCtrl.imgItem.type = '4'
     },
     configChange: function(type, value){
         let _this = this;
@@ -534,6 +561,14 @@ const imageCtrl = {
         switch(type){
             case "type":
                 imgItem.type = value;
+                if(value === '4'){
+                    let cId = _this.currentImgId;
+                    _this.cancelActiveImgItem()
+                    $("#" + cId).hide().css({
+                        "visibility":"hidden"
+                    });
+                    luckysheetsizeauto();
+                }
                 break;
             case "fixedPos":
                 imgItem.isFixedPos = value;
@@ -678,6 +713,9 @@ const imageCtrl = {
         if(_this.images == null){
             _this.images = {};
         }
+        if(_this.imagesCell == null){
+            _this.imagesCell = {};
+        }
 
         let imgItem = $.extend(true, {}, _this.imgItem);
         imgItem.src = img.src;
@@ -689,6 +727,8 @@ const imageCtrl = {
         imgItem.default.top = img.top;
         imgItem.crop.width = width;
         imgItem.crop.height = height;
+        imgItem.rowIndex = img.rowIndex;
+        imgItem.colIndex = img.colIndex;
 
         let scrollTop = $("#luckysheet-cell-main").scrollTop(),
             scrollLeft = $("#luckysheet-cell-main").scrollLeft();
@@ -697,14 +737,21 @@ const imageCtrl = {
         imgItem.fixedTop = img.top - scrollTop + Store.infobarHeight + Store.toolbarHeight + Store.calculatebarHeight + Store.columnHeaderHeight;
 
         let id = _this.generateRandomId();
+        if(img.id){
+            id = img.id
+        }
         let modelHtml = _this.modelHtml(id, imgItem);
 
         $("#luckysheet-image-showBoxs .img-list").append(modelHtml);
 
         _this.images[id] = imgItem;
+        _this.imagesCell[imgItem.rowIndex + "_" + imgItem.colIndex] = id
         _this.ref();
 
         _this.init();
+        if(imgItem.type === '4'){
+            luckysheetrefreshgrid()
+        }
     },
     moveImgItem: function() {
         let _this = this;
@@ -915,8 +962,27 @@ const imageCtrl = {
 
 
         delete _this.images[_this.currentImgId];
+        delete _this.imagesCell[imgItem.rowIndex+"_"+imgItem.colIndex];
         _this.currentImgId = null;
 
+        // 钩子 imageDeleteAfter
+        method.createHookFunction('imageDeleteAfter', imgItem);
+        _this.ref();
+    },
+    removeImgItemById: function(id) {
+        let _this = this;
+        let imgItem = _this.images[id];
+        // 钩子 imageDeleteBefore
+        if(!method.createHookFunction('imageDeleteBefore', imgItem)){
+            return;
+        }
+        $("#luckysheet-modal-dialog-activeImage").hide();
+        $("#luckysheet-modal-dialog-cropping").hide();
+        $("#luckysheet-modal-dialog-slider-imageCtrl").hide();
+        $("#" + _this.currentImgId).remove();
+        delete _this.images[_this.currentImgId];
+        delete _this.imagesCell[imgItem.rowIndex+"_"+imgItem.colIndex];
+        _this.currentImgId = null;
         // 钩子 imageDeleteAfter
         method.createHookFunction('imageDeleteAfter', imgItem);
         _this.ref();
@@ -1141,6 +1207,51 @@ const imageCtrl = {
 
         file.images = $.extend(true, {}, images);
         server.saveParam("all", Store.currentSheetIndex, file.images, { "k": "images" });
+    },
+    showPicFullScreen: function(id) {
+        let _this = this;
+        let imgItem = _this.images[id];
+        // 创建一个全屏的背景遮罩
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = 0;
+        overlay.style.left = 0;
+        overlay.style.right = 0;
+        overlay.style.bottom = 0;
+        overlay.style.zIndex = 10000;
+        overlay.style.background = 'rgba(0, 0, 0, 0.5)';
+        overlay.onclick = () => {
+            document.body.removeChild(overlay);
+        };
+
+        // 创建一个图片元素并设置为全屏居中
+        const img = document.createElement('img');
+        img.src = imgItem.src;
+        img.style.position = 'absolute';
+        img.style.top = '50%';
+        img.style.left = '50%';
+        img.style.transform = 'translate(-50%, -50%)';
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '100%';
+        img.style.zIndex = 10001;
+
+        // 添加关闭按钮
+        const closeBtn = document.createElement('span');
+        closeBtn.textContent = '关闭';
+        closeBtn.style.position = 'absolute';
+        closeBtn.style.top = 0;
+        closeBtn.style.right = 0;
+        closeBtn.style.padding = '10px';
+        closeBtn.style.color = 'white';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.style.zIndex = 10001;
+        closeBtn.onclick = () => {
+            document.body.removeChild(overlay);
+        };
+
+        overlay.appendChild(img);
+        overlay.appendChild(closeBtn);
+        document.body.appendChild(overlay);
     },
 }
 

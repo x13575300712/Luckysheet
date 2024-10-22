@@ -68,8 +68,18 @@ const controlHistory = {
         if(ctr.type === "loopIndex"){
             for(let i = 0;i < ctr.loopTime;i++){
                 controlHistory.redo(e)
+                if(Store.jfredo[Store.jfredo.length - 1]){
+                    if(Store.jfredo[Store.jfredo.length - 1].type === 'addRC'){
+
+                    }
+                }
             }
             Store.jfundo.push(ctr);
+            return;
+        }
+        if(ctr.type === "endFlg"){
+            Store.jfredo.push(ctr)
+            method.createHookFunction("messageInfo", ctr.messageType)
             return;
         }
         Store.jfundo.push(ctr);

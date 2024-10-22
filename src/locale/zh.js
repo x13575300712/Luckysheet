@@ -6714,6 +6714,7 @@ export default {
         moveCell1: "移动并调整单元格大小",
         moveCell2: "移动并且不调整单元格的大小",
         moveCell3: "不要移动单元格并调整其大小",
+        moveCell4: "单元格内图片",
         fixedPos: "固定位置",
         border: "边框",
         width: "宽度",

@@ -98,19 +98,25 @@ const luckysheetFreezen = {
             $("#luckysheet-grid-window-1").append(_this.freezenVerticalHTML);
 
             $("#luckysheet-freezebar-vertical").find(".luckysheet-freezebar-vertical-drop").hover(function () {
-                $(this).parent().addClass("luckysheet-freezebar-hover");
+                if(luckysheetConfigsetting.frozenDrop) {
+                    $(this).parent().addClass("luckysheet-freezebar-hover");
+                }
             }, function () {
-                $(this).parent().removeClass("luckysheet-freezebar-hover");
+                if(luckysheetConfigsetting.frozenDrop) {
+                    $(this).parent().removeClass("luckysheet-freezebar-hover");
+                }
             });
 
 
             $("#luckysheet-freezebar-vertical").find(".luckysheet-freezebar-vertical-drop").mousedown(function () {
-                _this.verticalmovestate = true;
-                _this.verticalmoveposition = $(this).position().left;
-                _this.windowWidth = $("#luckysheet-grid-window-1").width();
+                if(luckysheetConfigsetting.frozenDrop) {
+                    _this.verticalmovestate = true;
+                    _this.verticalmoveposition = $(this).position().left;
+                    _this.windowWidth = $("#luckysheet-grid-window-1").width();
 
-                $(this).parent().addClass("luckysheet-freezebar-active");
-                $("#luckysheet-freezebar-vertical").find(".luckysheet-freezebar-vertical-handle").css("cursor", "-webkit-grabbing");
+                    $(this).parent().addClass("luckysheet-freezebar-active");
+                    $("#luckysheet-freezebar-vertical").find(".luckysheet-freezebar-vertical-handle").css("cursor", "-webkit-grabbing");
+                }
             });
 
             let gridheight = $("#luckysheet-grid-window-1").height();

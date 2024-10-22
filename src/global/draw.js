@@ -4,6 +4,7 @@ import alternateformat from "../controllers/alternateformat";
 import luckysheetSparkline from "../controllers/sparkline";
 import menuButton from "../controllers/menuButton";
 import dataVerificationCtrl from "../controllers/dataVerificationCtrl";
+import imageCtrl from "../controllers/imageCtrl";
 import { luckysheetdefaultstyle, luckysheet_CFiconsImg, luckysheetdefaultFont } from "../controllers/constant";
 import { luckysheet_searcharray } from "../controllers/sheetSearch";
 import { dynamicArrayCompute } from "./dynamicArray";
@@ -1298,12 +1299,10 @@ let nullCellRender = function(
     ) {
         return;
     }
-
     luckysheetTableContent.fillRect(cellsize[0], cellsize[1], cellsize[2], cellsize[3]);
 
     if (r + "_" + c in dynamicArray_compute) {
         let value = dynamicArray_compute[r + "_" + c].v;
-
         luckysheetTableContent.fillStyle = "#000000";
         //文本宽度和高度
         let fontset = luckysheetdefaultFont();
@@ -1380,6 +1379,28 @@ let nullCellRender = function(
         luckysheetTableContent.strokeStyle = luckysheetdefaultstyle.strokeStyle;
         luckysheetTableContent.stroke();
         luckysheetTableContent.closePath();
+    }
+    let imagesCell = imageCtrl.imagesCell;
+    if (imagesCell != null &&
+        imagesCell[r + "_" + c] != null && imageCtrl.images !== null &&
+        imageCtrl.images[imagesCell[r + "_" + c]] !== null &&
+        imageCtrl.images[imagesCell[r + "_" + c]]?.type === '4'){
+        let pos_x = start_c + offsetLeft;
+        let pos_y = start_r + offsetTop + 1;
+        // if(imageCtrl.images[imagesCell[r + "_" + c]].drawFlg < 100){
+        //     imageCtrl.images[imagesCell[r + "_" + c]].drawFlg = imageCtrl.images[imagesCell[r + "_" + c]].drawFlg + 1
+            let src = imageCtrl.images[imagesCell[r + "_" + c]].src
+            let image = new Image()
+            let imageUrlHandle = Store.toJsonOptions && Store.toJsonOptions['imageUrlHandle'];
+            image.src = typeof imageUrlHandle === 'function' ? imageUrlHandle(src) : src;
+            luckysheetTableContent.drawImage(
+                image,
+                pos_x,
+                pos_y,
+                cellWidth,
+                cellHeight,
+            )
+        // }
     }
 
     // 单元格渲染后
@@ -1491,7 +1512,7 @@ let cellRender = function(
     }
 
     luckysheetTableContent.fillRect(cellsize[0], cellsize[1], cellsize[2], cellsize[3]);
-
+    let imagesCell = imageCtrl.imagesCell;
     let dataVerification = dataVerificationCtrl.dataVerification;
     let vValue = getcellvalue(r,c)
     if (
@@ -1543,7 +1564,6 @@ let cellRender = function(
     //溢出单元格
     let cellOverflow_bd_r_render = true; //溢出单元格右边框是否需要绘制
     let cellOverflow_colInObj = cellOverflow_colIn(cellOverflowMap, r, c, dataset_col_st, dataset_col_ed);
-
     if (cell.tb == "1" && cellOverflow_colInObj.colIn) {
         //此单元格 为 溢出单元格渲染范围最后一列，绘制溢出单元格内容
         if (cellOverflow_colInObj.colLast) {
@@ -1633,6 +1653,27 @@ let cellRender = function(
         luckysheetTableContent.fillText(value == null ? "" : value, horizonAlignPos + 14, verticalAlignPos_text);
 
         luckysheetTableContent.restore();
+    }else if (imagesCell !== null && imageCtrl.images !== null &&
+        imagesCell[r + "_" + c] !== null &&
+        imageCtrl.images[imagesCell[r + "_" + c]] !== null &&
+        imageCtrl.images[imagesCell[r + "_" + c]]?.type === '4'
+    ){
+        let pos_x = start_c + offsetLeft;
+        let pos_y = start_r + offsetTop + 1;
+        // if(imageCtrl.images[imagesCell[r + "_" + c]].drawFlg < 100){
+        //     imageCtrl.images[imagesCell[r + "_" + c]].drawFlg = imageCtrl.images[imagesCell[r + "_" + c]].drawFlg + 1
+            let src = imageCtrl.images[imagesCell[r + "_" + c]].src
+            let image = new Image()
+            let imageUrlHandle = Store.toJsonOptions && Store.toJsonOptions['imageUrlHandle'];
+            image.src = typeof imageUrlHandle === 'function' ? imageUrlHandle(src) : src;
+            luckysheetTableContent.drawImage(
+                image,
+                pos_x,
+                pos_y,
+                cellWidth,
+                cellHeight,
+            )
+        // }
     } else {
         //若单元格有条件格式数据条
         if (

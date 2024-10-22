@@ -5,6 +5,7 @@ import conditionformat from './conditionformat';
 import alternateformat from './alternateformat';
 import cellDatePickerCtrl from './cellDatePickerCtrl';
 import dataVerificationCtrl from './dataVerificationCtrl';
+import imageCtrl from './imageCtrl';
 import {checkProtectionLocked,checkProtectionCellHidden}  from './protection';
 import { chatatABC } from '../utils/util';
 import { isEditMode } from '../global/validate';
@@ -27,7 +28,13 @@ export function luckysheetupdateCell(row_index1, col_index1, d, cover, isnotfocu
     if(isEditMode() || Store.allowEdit===false){//此模式下禁用单元格编辑
         return;
     }
-
+    //查看是否为图片单元格
+    if(imageCtrl.imagesCell!=null && imageCtrl.imagesCell[row_index1+"_"+col_index1]
+        && imageCtrl.images !== null &&
+        imageCtrl.images[imageCtrl.imagesCell[row_index1+"_"+col_index1]] !== null &&
+        imageCtrl.images[imageCtrl.imagesCell[row_index1+"_"+col_index1]]?.type === '4'){
+        return;
+    }
     // 钩子函数
     if(!method.createHookFunction('cellEditBefore',Store.luckysheet_select_save)){return;}
 

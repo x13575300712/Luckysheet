@@ -5922,11 +5922,13 @@ const luckysheetformula = {
                 }
                 updateValue.v = item.v;
                 updateValue.f = item.f;
-                const cell = setcellvalue(item.r, item.c, data, updateValue);
-                server.saveParam("v", item.index, cell, {
-                    r: item.r,
-                    c: item.c,
-                });
+                if(data[item.r]){
+                    const cell = setcellvalue(item.r, item.c, data, updateValue);
+                    server.saveParam("v", item.index, cell, {
+                        r: item.r,
+                        c: item.c,
+                    });
+                }
             }
 
             editor.webWorkerFlowDataCache(Store.flowdata); //worker存数据

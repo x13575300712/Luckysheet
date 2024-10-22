@@ -853,6 +853,7 @@ export function createToolbarHtml() {
     };
 
     const showtoolbar = luckysheetConfigsetting.showtoolbar;
+    const customToolButton = luckysheetConfigsetting.customToolButton;
     const showtoolbarConfig = luckysheetConfigsetting.showtoolbarConfig;
 
     const buttonHTML = ['<div class="luckysheet-toolbar-left-theme"></div>'];
@@ -876,6 +877,30 @@ export function createToolbarHtml() {
                 buttonHTML.push(htmlMap[key]);
             }
         });
+        if(customToolButton){
+            buttonHTML.push(
+                `<div id="toolbar-separator-${camel2split('custom-tool-bar-split')}" class="luckysheet-toolbar-separator luckysheet-inline-block" style="user-select: none;"></div>`
+            );
+            let index = 0
+            for(const obj of customToolButton){
+                buttonHTML.push(`<div data-index="${index}" class="luckysheetToolbarHandleAdd_custom luckysheet-toolbar-button-split-left luckysheet-toolbar-button luckysheet-inline-block"
+                     id="luckysheet-exportXlsx-btn-title" role="button" style="user-select: none;">
+                    <div class="luckysheet-toolbar-button-outer-box luckysheet-inline-block"
+                    style="user-select: none;">
+                        <div class="luckysheet-toolbar-menu-button-inner-box luckysheet-inline-block"
+                        style="user-select: none;">
+                            <div class="luckysheet-toolbar-menu-button-caption luckysheet-inline-block"
+                            style="user-select: none;">
+                                <div class="luckysheet-toolbar-menu-button-caption luckysheet-inline-block" style="user-select: none;${obj.css}">
+                                        ${obj.title}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`)
+                index ++
+            }
+        }
         return buttonHTML.join('');
     }
 
@@ -917,6 +942,30 @@ export function createToolbarHtml() {
             }
         } else {
             buttonHTML.push(htmlMap[key]);
+        }
+    }
+    if(customToolButton){
+        buttonHTML.push(
+            `<div id="toolbar-separator-${camel2split('custom-tool-bar-split')}" class="luckysheet-toolbar-separator luckysheet-inline-block" style="user-select: none;"></div>`
+        );
+        let index = 0
+        for(const obj of customToolButton){
+            buttonHTML.push(`<div data-index="${index}" class="luckysheetToolbarHandleAdd_custom luckysheet-toolbar-button-split-left luckysheet-toolbar-button luckysheet-inline-block"
+                     id="luckysheet-exportXlsx-btn-title" role="button" style="user-select: none;">
+                    <div class="luckysheet-toolbar-button-outer-box luckysheet-inline-block"
+                    style="user-select: none;">
+                        <div class="luckysheet-toolbar-menu-button-inner-box luckysheet-inline-block"
+                        style="user-select: none;">
+                            <div class="luckysheet-toolbar-menu-button-caption luckysheet-inline-block"
+                            style="user-select: none;">
+                                <div class="luckysheet-toolbar-menu-button-caption luckysheet-inline-block" style="user-select: none;${obj.css}">
+                                        ${obj.title}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`)
+            index ++
         }
     }
     return buttonHTML.join('');

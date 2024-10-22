@@ -94,7 +94,7 @@ function setcellvalue(r, c, d, v) {
         cell.ct = { fa: "General", t: "b" };
         cell.v = false;
     } else if (vupdateStr.substr(-1) === "%" && isRealNum(vupdateStr.substring(0, vupdateStr.length - 1))) {
-        if (cell.ct && cell.ct.fa && cell.ct.fa.indexOf('%+') === -1){
+        if (cell.ct && cell.ct.fa && cell.ct.fa.indexOf('%+') === -1 && cell.ct.fa.indexOf('%') === -1){
             cell.ct = { fa: "0%", t: "n" };
         }
         cell.v = vupdateStr.substring(0, vupdateStr.length - 1) / 100;
